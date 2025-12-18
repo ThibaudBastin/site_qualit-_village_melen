@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Carte du patrimoine de Melen</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Leaflet CSS -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  />
+
+  <link rel="stylesheet" href="style.css">
+
+  <style>
+    #map {
+      height: 80vh;
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Carte du patrimoine de Melen</h1>
+  <nav>
+    <a href="index.html">Actualités</a>
+    <a href="articles.html">Articles</a>
+    <a href="carte.html">Carte</a>
+    <a href="agenda.html">Agenda</a>
+    <a href="contact.html">Contacts</a>
+  </nav>
+</header>
+
+<main>
+  <div id="map"></div>
+</main>
+
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+  // 1. Centrer la carte sur Melen
+  const map = L.map('map').setView([50.642, 5.728], 15);
+
+  // 2. Fond de carte OpenStreetMap
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap'
+  }).addTo(map);
+
+  // 3. Marqueurs
+const lieux = [
+  {
+    id: "place-eglise",
+    nom: "Place de l'église",
+    coords: [50.6465, 5.7365],
+    articles: [
+      { titre: "Le vieux chêne", lien: "article-vieux-chene.html" },
+      { titre: "Le vieux et le nouveau chêne", lien: "article-vieux-nouveau-chene.html" }
+    ]
+  },
+  {
+    id: "rue-haute",
+    nom: "Rue Haute",
+    coords: [50.6466, 5.7291],
+    articles: [
+      { titre: "Louis et Léonard", lien: "article-louis-leonard.html" },
+      { titre: "Un petit Juif caché qui chantait trop", lien: "article-petit-juif-chanter.html" }
+    ]
+  }
+];
+
+ const markers = {};
+
+lieux.forEach(lieu => {
+  let html = `<strong>${lieu.nom}</strong><ul>`;
+  lieu.articles.forEach(a => {
+    html += `<li><a href="${a.lien}">${a.titre}</a></li>`;
+  });
+  html += `</ul>`;
+
+    const marker = L.marker(lieu.coords)
+      .addTo(map)
+      .bindPopup(html);
+
+    markers[lieu.id] = marker;
+});
+
+// Zoom automatique depuis un article
+const hash = window.location.hash.replace("#", "");
+
+if (hash && markers[hash]) {
+  const marker = markers[hash];
+  map.setView(marker.getLatLng(), 17);
+  marker.openPopup();
+}
+
+
+</script>
+
+</body>
+</html>
