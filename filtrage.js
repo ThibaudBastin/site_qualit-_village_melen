@@ -10,7 +10,8 @@ fetch('articles.json')
           applyFilters(articles);
         });
       });
-  });
+  })
+  .catch(err => console.error('Erreur fetch JSON:', err));
 
 function populateFilters(articles) {
   fillSelect('filterRue', articles.map(a => a.rue));
@@ -56,6 +57,7 @@ function renderArticles(list) {
     div.className = 'article-item';
     div.innerHTML = `
       <h3>${a.title}</h3>
+      ${a.image ? `<img src="${a.image}" alt="${a.title}" class="article-image">` : ''}
       <p>
         ${a.rue ? '📍 ' + a.rue + '<br>' : ''}
         ${a.periode ? '🕰 ' + a.periode + '<br>' : ''}

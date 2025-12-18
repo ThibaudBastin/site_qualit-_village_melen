@@ -5,7 +5,8 @@
     "rue": "Place de l'église",
     "periode": "18e–20e siècle",
     "famille": null,
-    "theme": "Patrimoine"
+    "theme": "Patrimoine",
+    "image": "images/vieux_chene.jpeg"
   },
   {
     "title": "Mini-révolution mélinoise pour le bac à l'eau de Reux",
@@ -13,7 +14,8 @@
     "rue": "Rue Reux",
     "periode": "Début 20e siècle",
     "famille": null,
-    "theme": "Vie quotidienne"
+    "theme": "Vie quotidienne",
+    "image": "images/bac_reux.jpeg"
   },
   {
     "title": "Une petite juive cachée rue Louis Pasteur",
@@ -21,7 +23,8 @@
     "rue": "Rue Louis Pasteur",
     "periode": "Seconde Guerre mondiale",
     "famille": "Fafchamps",
-    "theme": "Résistance"
+    "theme": "Résistance",
+    "image": "images/rue-louis-pasteur.jpeg"
   },
   {
     "title": "Le p'tit curé a aidé à sauver des enfants juifs",
@@ -29,6 +32,34 @@
     "rue": null,
     "periode": "Seconde Guerre mondiale",
     "famille": "Malvaux",
-    "theme": "Résistance"
-  }
+    "theme": "Résistance",
+    "image": null
+  },
+    {
+    "title": "Un « petit Juif » caché qui chantait trop et près des Allemands",
+    "file": "article-petit-juif-chant.html",
+    "rue": null,
+    "periode": "1943-44",
+    "famille": null,
+    "theme": "Résistance",
+    "image": "images/ferme-des-chenes.jpg"
+  },
+  {
+    "title": "Le vieux et le nouveau chêne",
+    "file": "article-vieux-nouveau-chene.html",
+    "rue": "Place de l'église",
+    "periode": "18e–20e siècle",
+    "famille": null,
+    "theme": "Patrimoine",
+    "image": "images/nouveau-chene-place-eglise.jpeg"
+  },
+  {
+  "title": "Louis et Léonard, les petits Juifs cachés rue Haute",
+  "file": "article-louis-leonard.html",
+  "rue": "Rue Haute",
+  "periode": "1943-44",
+  "famille": null,
+  "theme": "Résistance",
+  "image": "images/rue-haute1.jpeg"
+}
 ]
