@@ -2,7 +2,7 @@
   {
     "title": "Le vieux chêne, branlant, mais star à Melen",
     "file": "article-vieux-chene.html",
-    "rueId": "place-eglise",           // pour la carte
+    "rueId": "place-eglise",           
     "rue": "Place de l'église",
     "periode": "18e–20e siècle",
     "famille": null,
@@ -12,7 +12,7 @@
   {
     "title": "Mini-révolution mélinoise pour le bac à l'eau de Reux",
     "file": "article-bac-reux.html",
-    "rueId": "rue-reux",           // pour la carte
+    "rueId": "rue-reux",           
     "rue": "Rue Reux",
     "periode": "Début 20e siècle",
     "famille": null,
@@ -22,7 +22,7 @@
   {
     "title": "Une petite juive cachée rue Louis Pasteur",
     "file": "Article-petite-juive-cachee.html",
-    "rueId": "rue-louis-pasteur",           // pour la carte
+    "rueId": "rue-louis-pasteur",           
     "rue": "Rue Louis Pasteur",
     "periode": "Seconde Guerre mondiale",
     "famille": "Fafchamps",
@@ -41,7 +41,7 @@
     {
     "title": "Un « petit Juif » caché qui chantait trop et près des Allemands",
     "file": "Article-petit-juif-chant.html",
-    "rueId": "parc-hauzeur",           // pour la carte
+    "rueId": "parc-hauzeur",          
     "rue": "Rue du Parc Hauzeur",
     "periode": "1943-44",
     "famille": null,
@@ -51,7 +51,7 @@
   {
     "title": "Le vieux et le nouveau chêne",
     "file": "Article-vieux-nouveau-chene.html",
-    "rueId": "place-eglise",           // pour la carte
+    "rueId": "place-eglise",          
     "rue": "Place de l'église",
     "periode": "18e–20e siècle",
     "famille": null,
@@ -61,7 +61,7 @@
   {
   "title": "Louis et Léonard, les petits Juifs cachés rue Haute",
   "file": "Article-louis-leonard.html",
-  "rueId": "rue-haute",           // pour la carte
+  "rueId": "rue-haute",         
   "rue": "Rue Haute",
   "periode": "1943-44",
   "famille": null,
