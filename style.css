@@ -143,7 +143,12 @@ figcaption {
   height: 65vh;
   min-height: 400px;
   max-height: 700px;
+  margin-bottom: 1rem;
   border-radius: 6px;
+}
+
+.popup-content {
+  font-size: 14px;
 }
 
 /* ========== Footer ========== */
