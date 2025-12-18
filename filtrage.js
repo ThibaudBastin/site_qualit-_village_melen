@@ -14,7 +14,7 @@ fetch('articles.json')
   .catch(err => console.error('Erreur fetch JSON:', err));
 
 function populateFilters(articles) {
-  fillSelect('filterRue', articles.map(a => a.rue));
+  fillSelect('filterRue', articles.map(a => a.rueNom));
   fillSelect('filterPeriode', articles.map(a => a.periode));
   fillSelect('filterFamille', articles.map(a => a.famille));
   fillSelect('filterTheme', articles.map(a => a.theme));
@@ -39,7 +39,7 @@ function applyFilters(articles) {
   };
 
   const filtered = articles.filter(a =>
-    (!filters.rue || a.rue === filters.rue) &&
+    (!filters.rue || a.rueNom === filters.rue) &&
     (!filters.periode || a.periode === filters.periode) &&
     (!filters.famille || a.famille === filters.famille) &&
     (!filters.theme || a.theme === filters.theme)
@@ -47,6 +47,7 @@ function applyFilters(articles) {
 
   renderArticles(filtered);
 }
+
 
 function renderArticles(list) {
   const container = document.getElementById('articlesList');
