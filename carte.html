@@ -1,128 +1,79 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Carte du Village</title>
-
-  <!-- Style global du site -->
-  <link rel="stylesheet" href="style.css">
-
-  <!-- Style Leaflet -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css">
-</head>
-
-<body>
-  <header>
-    <h1>Carte du Village</h1>
-    <nav>
-      <a href="index.html">Actualités</a>
-      <a href="articles.html">Articles</a>
-      <a href="agenda.html">Agenda</a>
-      <a href="contact.html">Contacts</a>
-    </nav>
-  </header>
-
-<main>
-  <section>
-    <h2>Carte du village</h2>
-    <div id="map"></div>
-  </section>
-</main>
-
-  <footer>
-    <p>© 2025 – Groupement Intercommunal</p>
-  </footer>
-
   <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
   <script>
-function initMap(articles) {
+    fetch('articles.json')
+      .then(res => res.json())
+      .then(articles => initMap(articles))
+      .catch(err => console.error('Erreur chargement articles:', err));
 
-  const map = L.map('map').setView([50.600, 5.850], 15);
+    function initMap(articles) {
 
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19,
-    attribution: '© OpenStreetMap'
-  }).addTo(map);
+      const map = L.map('map').setView([50.600, 5.850], 15);
 
-  // Regrouper les articles par rueId
-  const articlesByRue = {};
-  articles.forEach(a => {
-    if (a.rueId) {
-      if (!articlesByRue[a.rueId]) {
-        articlesByRue[a.rueId] = [];
-      }
-      articlesByRue[a.rueId].push(a);
-    }
-  });
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '© OpenStreetMap'
+      }).addTo(map);
 
-  // Définition des lieux
-  const lieux = {
-    "place-eglise": {
-      nom: "Place de l'Église",
-      coords: [50.601, 5.851]
-    },
-    "rue-reux": {
-      nom: "Rue Reux",
-      coords: [50.602, 5.852]
-    },
-    "rue-louis-pasteur": {
-      nom: "Rue Louis Pasteur",
-      coords: [50.603, 5.853]
-    },
-    "rue-haute": {
-      nom: "Rue Haute",
-      coords: [50.604, 5.854]
-    },
-    "parc-hauzeur": {
-      nom: "Rue du Parc Hauzeur",
-      coords: [50.606, 5.854]
-    }
-  };
-
-  // Créer les marqueurs
-  Object.entries(lieux).forEach(([rueId, lieu]) => {
-
-    const articlesLieu = articlesByRue[rueId] || [];
-
-    let popupHtml = `<strong>${lieu.nom}</strong><br><br>`;
-
-    if (articlesLieu.length > 0) {
-      popupHtml += '<ul>';
-      articlesLieu.forEach(a => {
-        popupHtml += `
-          <li>
-            <a href="${a.file}">
-              ${a.title}
-            </a>
-          </li>
-        `;
+      const articlesByRue = {};
+      articles.forEach(a => {
+        if (a.rueId) {
+          if (!articlesByRue[a.rueId]) {
+            articlesByRue[a.rueId] = [];
+          }
+          articlesByRue[a.rueId].push(a);
+        }
       });
-      popupHtml += '</ul>';
-    } else {
-      popupHtml += `<em>Aucun article pour ce lieu</em>`;
+
+      const lieux = {
+        "place-eglise": {
+          nom: "Place de l'Église",
+          coords: [50.601, 5.851]
+        },
+        "rue-reux": {
+          nom: "Rue Reux",
+          coords: [50.602, 5.852]
+        },
+        "rue-louis-pasteur": {
+          nom: "Rue Louis Pasteur",
+          coords: [50.603, 5.853]
+        },
+        "rue-haute": {
+          nom: "Rue Haute",
+          coords: [50.604, 5.854]
+        },
+        "parc-hauzeur": {
+          nom: "Rue du Parc Hauzeur",
+          coords: [50.606, 5.854]
+        }
+      };
+
+      Object.entries(lieux).forEach(([rueId, lieu]) => {
+
+        const articlesLieu = articlesByRue[rueId] || [];
+        let popupHtml = `<strong>${lieu.nom}</strong><br><br>`;
+
+        if (articlesLieu.length > 0) {
+          popupHtml += '<ul>';
+          articlesLieu.forEach(a => {
+            popupHtml += `<li><a href="${a.file}">${a.title}</a></li>`;
+          });
+          popupHtml += '</ul>';
+        } else {
+          popupHtml += `<em>Aucun article pour ce lieu</em>`;
+        }
+
+        L.marker(lieu.coords)
+          .addTo(map)
+          .bindPopup(popupHtml);
+      });
+
+      const params = new URLSearchParams(window.location.search);
+      const rueId = params.get('rue');
+
+      if (rueId && lieux[rueId]) {
+        map.setView(lieux[rueId].coords, 18);
+      }
     }
-
-    L.marker(lieu.coords)
-      .addTo(map)
-      .bindPopup(popupHtml);
-  });
-
-  // Zoom automatique depuis l’URL (?rue=...)
-  const params = new URLSearchParams(window.location.search);
-  const rueId = params.get('rue');
-
-  if (rueId && lieux[rueId]) {
-    map.setView(lieux[rueId].coords, 18);
-  }
-}
-</script>
-
-fetch('articles.json')
-  .then(res => res.json())
-  .then(articles => initMap(articles))
-  .catch(err => console.error('Erreur chargement articles:', err));
-</script>
-
-</body>
-</html>
+  </script>
