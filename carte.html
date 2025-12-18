@@ -35,34 +35,94 @@
   </footer>
 
   <!-- Leaflet JS -->
-  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script>
-    // Initialisation de la carte centrée sur le village
-    const map = L.map('map').setView([50.600, 5.850], 15); // Coordonnées exemple
+function initMap(articles) {
 
-    // Ajouter le fond OpenStreetMap
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 19,
-      attribution: '© OpenStreetMap'
-    }).addTo(map);
+  const map = L.map('map').setView([50.600, 5.850], 15);
 
-    // Définir les marqueurs avec leurs coordonnées et popup
-    const markers = {
-      "place-eglise": L.marker([50.601, 5.851]).bindPopup('<div class="popup-content"><strong>Place de l\'Église</strong></div>').addTo(map),
-      "rue-reux": L.marker([50.602, 5.852]).bindPopup('<div class="popup-content"><strong>Rue Reux</strong></div>').addTo(map),
-      "rue-louis-pasteur": L.marker([50.603, 5.853]).bindPopup('<div class="popup-content"><strong>Rue Louis Pasteur</strong></div>').addTo(map),
-      "rue-haute": L.marker([50.604, 5.854]).bindPopup('<div class="popup-content"><strong>Rue Haute</strong></div>').addTo(map),
-      "parc-hauzeur": L.marker([50.606, 5.854]).bindPopup('<div class="popup-content"><strong>Rue du parc Hauzeur</strong></div>').addTo(map)
-    };
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '© OpenStreetMap'
+  }).addTo(map);
 
-    // Récupérer l'ID de la rue depuis l'URL
-    const params = new URLSearchParams(window.location.search);
-    const rueId = params.get('rue');
-
-    if (rueId && markers[rueId]) {
-      map.setView(markers[rueId].getLatLng(), 18); // Zoom sur le marqueur
-      markers[rueId].openPopup();
+  // Regrouper les articles par rueId
+  const articlesByRue = {};
+  articles.forEach(a => {
+    if (a.rueId) {
+      if (!articlesByRue[a.rueId]) {
+        articlesByRue[a.rueId] = [];
+      }
+      articlesByRue[a.rueId].push(a);
     }
-  </script>
+  });
+
+  // Définition des lieux
+  const lieux = {
+    "place-eglise": {
+      nom: "Place de l'Église",
+      coords: [50.601, 5.851]
+    },
+    "rue-reux": {
+      nom: "Rue Reux",
+      coords: [50.602, 5.852]
+    },
+    "rue-louis-pasteur": {
+      nom: "Rue Louis Pasteur",
+      coords: [50.603, 5.853]
+    },
+    "rue-haute": {
+      nom: "Rue Haute",
+      coords: [50.604, 5.854]
+    },
+    "parc-hauzeur": {
+      nom: "Rue du Parc Hauzeur",
+      coords: [50.606, 5.854]
+    }
+  };
+
+  // Créer les marqueurs
+  Object.entries(lieux).forEach(([rueId, lieu]) => {
+
+    const articlesLieu = articlesByRue[rueId] || [];
+
+    let popupHtml = `<strong>${lieu.nom}</strong><br><br>`;
+
+    if (articlesLieu.length > 0) {
+      popupHtml += '<ul>';
+      articlesLieu.forEach(a => {
+        popupHtml += `
+          <li>
+            <a href="${a.file}">
+              ${a.title}
+            </a>
+          </li>
+        `;
+      });
+      popupHtml += '</ul>';
+    } else {
+      popupHtml += `<em>Aucun article pour ce lieu</em>`;
+    }
+
+    L.marker(lieu.coords)
+      .addTo(map)
+      .bindPopup(popupHtml);
+  });
+
+  // Zoom automatique depuis l’URL (?rue=...)
+  const params = new URLSearchParams(window.location.search);
+  const rueId = params.get('rue');
+
+  if (rueId && lieux[rueId]) {
+    map.setView(lieux[rueId].coords, 18);
+  }
+}
+</script>
+
+fetch('articles.json')
+  .then(res => res.json())
+  .then(articles => initMap(articles))
+  .catch(err => console.error('Erreur chargement articles:', err));
+</script>
+
 </body>
 </html>
