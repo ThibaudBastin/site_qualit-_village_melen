@@ -56,7 +56,10 @@ function renderArticles(list) {
   list.forEach(a => {
     const div = document.createElement('div');
     div.className = 'article-item';
-    const rueLink = a.rueId ? `<a href="carte.html?rue=${a.rueId}">📍 ${a.rueNom}</a>` : '';
+    const rueLink =
+        a.rueId && a.rueNom
+        ? `<a href="carte.html?rue=${a.rueId}">📍 ${a.rueNom}</a>`
+        : '';
     div.innerHTML = `
     <h3>${a.title}</h3>
     ${a.image ? `<img src="${a.image}" alt="${a.title}" class="article-image">` : ''}
