@@ -1,0 +1,34 @@
+[
+  {
+    "title": "Le vieux chêne, branlant, mais star à Melen",
+    "file": "article-vieux-chene.html",
+    "rue": "Place de l'église",
+    "periode": "18e–20e siècle",
+    "famille": null,
+    "theme": "Patrimoine"
+  },
+  {
+    "title": "Mini-révolution mélinoise pour le bac à l'eau de Reux",
+    "file": "article-bac-reux.html",
+    "rue": "Rue Reux",
+    "periode": "Début 20e siècle",
+    "famille": null,
+    "theme": "Vie quotidienne"
+  },
+  {
+    "title": "Une petite juive cachée rue Louis Pasteur",
+    "file": "article-petite-juive-cachee.html",
+    "rue": "Rue Louis Pasteur",
+    "periode": "Seconde Guerre mondiale",
+    "famille": "Fafchamps",
+    "theme": "Résistance"
+  },
+  {
+    "title": "Le p'tit curé a aidé à sauver des enfants juifs",
+    "file": "article-ptit-cure-video.html",
+    "rue": null,
+    "periode": "Seconde Guerre mondiale",
+    "famille": "Malvaux",
+    "theme": "Résistance"
+  }
+]
