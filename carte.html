@@ -2,102 +2,68 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>Carte du patrimoine de Melen</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <!-- Leaflet CSS -->
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-  />
-
-  <link rel="stylesheet" href="style.css">
-
+  <title>Carte du Village</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <style>
     #map {
-      height: 80vh;
+      height: 600px;
       width: 100%;
+      margin-bottom: 20px;
+    }
+    .popup-content {
+      font-size: 14px;
     }
   </style>
 </head>
 <body>
+  <header>
+    <h1>Carte du Village</h1>
+    <nav>
+      <a href="index.html">Actualités</a>
+      <a href="articles.html">Articles</a>
+      <a href="agenda.html">Agenda</a>
+      <a href="contact.html">Contacts</a>
+    </nav>
+  </header>
 
-<header>
-  <h1>Carte du patrimoine de Melen</h1>
-  <nav>
-    <a href="index.html">Actualités</a>
-    <a href="articles.html">Articles</a>
-    <a href="carte.html">Carte</a>
-    <a href="agenda.html">Agenda</a>
-    <a href="contact.html">Contacts</a>
-  </nav>
-</header>
+  <main>
+    <div id="map"></div>
+  </main>
 
-<main>
-  <div id="map"></div>
-</main>
+  <footer>
+    <p>© 2025 – Groupement Intercommunal</p>
+  </footer>
 
-<!-- Leaflet JS -->
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script>
+    // Initialisation de la carte centrée sur le village
+    const map = L.map('map').setView([50.600, 5.850], 15); // Coordonnées exemple
 
-<script>
-  // 1. Centrer la carte sur Melen
-  const map = L.map('map').setView([50.642, 5.728], 15);
+    // Ajouter le fond OpenStreetMap
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '© OpenStreetMap'
+    }).addTo(map);
 
-  // 2. Fond de carte OpenStreetMap
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© OpenStreetMap'
-  }).addTo(map);
+    // Définir les marqueurs avec leurs coordonnées et popup
+    const markers = {
+      "place-eglise": L.marker([50.601, 5.851]).bindPopup('<div class="popup-content"><strong>Place de l\'Église</strong></div>').addTo(map),
+      "rue-reux": L.marker([50.602, 5.852]).bindPopup('<div class="popup-content"><strong>Rue Reux</strong></div>').addTo(map),
+      "rue-louis-pasteur": L.marker([50.603, 5.853]).bindPopup('<div class="popup-content"><strong>Rue Louis Pasteur</strong></div>').addTo(map),
+      "rue-haute": L.marker([50.604, 5.854]).bindPopup('<div class="popup-content"><strong>Rue Haute</strong></div>').addTo(map),
+      "parc-hauzeur": L.marker([50.606, 5.854]).bindPopup('<div class="popup-content"><strong>Rue Haute</strong></div>').addTo(map)
+    };
 
-  // 3. Marqueurs
-const lieux = [
-  {
-    id: "place-eglise",
-    nom: "Place de l'église",
-    coords: [50.6465, 5.7365],
-    articles: [
-      { titre: "Le vieux chêne", lien: "article-vieux-chene.html" },
-      { titre: "Le vieux et le nouveau chêne", lien: "article-vieux-nouveau-chene.html" }
-    ]
-  },
-  {
-    id: "rue-haute",
-    nom: "Rue Haute",
-    coords: [50.6466, 5.7291],
-    articles: [
-      { titre: "Louis et Léonard", lien: "article-louis-leonard.html" },
-      { titre: "Un petit Juif caché qui chantait trop", lien: "article-petit-juif-chanter.html" }
-    ]
-  }
-];
+    // Récupérer l'ID de la rue depuis l'URL
+    const params = new URLSearchParams(window.location.search);
+    const rueId = params.get('rue');
 
- const markers = {};
-
-lieux.forEach(lieu => {
-  let html = `<strong>${lieu.nom}</strong><ul>`;
-  lieu.articles.forEach(a => {
-    html += `<li><a href="${a.lien}">${a.titre}</a></li>`;
-  });
-  html += `</ul>`;
-
-    const marker = L.marker(lieu.coords)
-      .addTo(map)
-      .bindPopup(html);
-
-    markers[lieu.id] = marker;
-});
-
-// Zoom automatique depuis un article
-const hash = window.location.hash.replace("#", "");
-
-if (hash && markers[hash]) {
-  const marker = markers[hash];
-  map.setView(marker.getLatLng(), 17);
-  marker.openPopup();
-}
-
-
-</script>
-
+    if (rueId && markers[rueId]) {
+      map.setView(markers[rueId].getLatLng(), 18); // Zoom sur le marqueur
+      markers[rueId].openPopup();
+    }
+  </script>
 </body>
 </html>

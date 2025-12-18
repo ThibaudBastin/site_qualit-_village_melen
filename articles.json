@@ -2,6 +2,7 @@
   {
     "title": "Le vieux chêne, branlant, mais star à Melen",
     "file": "article-vieux-chene.html",
+    "rueId": "place-eglise",           // pour la carte
     "rue": "Place de l'église",
     "periode": "18e–20e siècle",
     "famille": null,
@@ -11,6 +12,7 @@
   {
     "title": "Mini-révolution mélinoise pour le bac à l'eau de Reux",
     "file": "article-bac-reux.html",
+    "rueId": "rue-reux",           // pour la carte
     "rue": "Rue Reux",
     "periode": "Début 20e siècle",
     "famille": null,
@@ -19,7 +21,8 @@
   },
   {
     "title": "Une petite juive cachée rue Louis Pasteur",
-    "file": "article-petite-juive-cachee.html",
+    "file": "Article-petite-juive-cachee.html",
+    "rueId": "rue-louis-pasteur",           // pour la carte
     "rue": "Rue Louis Pasteur",
     "periode": "Seconde Guerre mondiale",
     "famille": "Fafchamps",
@@ -28,7 +31,7 @@
   },
   {
     "title": "Le p'tit curé a aidé à sauver des enfants juifs",
-    "file": "article-ptit-cure-video.html",
+    "file": "Article-ptit-cure-video.html",
     "rue": null,
     "periode": "Seconde Guerre mondiale",
     "famille": "Malvaux",
@@ -37,8 +40,9 @@
   },
     {
     "title": "Un « petit Juif » caché qui chantait trop et près des Allemands",
-    "file": "article-petit-juif-chant.html",
-    "rue": null,
+    "file": "Article-petit-juif-chant.html",
+    "rueId": "parc-hauzeur",           // pour la carte
+    "rue": "Rue du Parc Hauzeur",
     "periode": "1943-44",
     "famille": null,
     "theme": "Résistance",
@@ -46,7 +50,8 @@
   },
   {
     "title": "Le vieux et le nouveau chêne",
-    "file": "article-vieux-nouveau-chene.html",
+    "file": "Article-vieux-nouveau-chene.html",
+    "rueId": "place-eglise",           // pour la carte
     "rue": "Place de l'église",
     "periode": "18e–20e siècle",
     "famille": null,
@@ -55,7 +60,8 @@
   },
   {
   "title": "Louis et Léonard, les petits Juifs cachés rue Haute",
-  "file": "article-louis-leonard.html",
+  "file": "Article-louis-leonard.html",
+  "rueId": "rue-haute",           // pour la carte
   "rue": "Rue Haute",
   "periode": "1943-44",
   "famille": null,

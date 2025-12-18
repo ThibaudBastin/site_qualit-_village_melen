@@ -55,16 +55,17 @@ function renderArticles(list) {
   list.forEach(a => {
     const div = document.createElement('div');
     div.className = 'article-item';
+    const rueLink = a.rueId ? `<a href="carte.html?rue=${a.rueId}">📍 ${a.rueNom}</a>` : '';
     div.innerHTML = `
-      <h3>${a.title}</h3>
-      ${a.image ? `<img src="${a.image}" alt="${a.title}" class="article-image">` : ''}
-      <p>
-        ${a.rue ? '📍 ' + a.rue + '<br>' : ''}
+    <h3>${a.title}</h3>
+    ${a.image ? `<img src="${a.image}" alt="${a.title}" class="article-image">` : ''}
+    <p>
+        ${a.rueId ? rueLink + '<br>' : ''}
         ${a.periode ? '🕰 ' + a.periode + '<br>' : ''}
         ${a.famille ? '👨‍👩‍👧 ' + a.famille + '<br>' : ''}
         ${a.theme ? '🏷 ' + a.theme : ''}
-      </p>
-      <a href="${a.file}">Lire l’article</a>
+    </p>
+    <a href="${a.file}">Lire l’article</a>
     `;
     container.appendChild(div);
   });
