@@ -68,5 +68,25 @@
   "famille": null,
   "theme": "Résistance",
   "image": "images/rue-haute1.jpeg"
+},
+{
+  "title": "Plus de pompe, mais des robiniers sur la place",
+  "file": "Article-plus-de-pompe-robiniers.html",
+  "rueId": "place-eglise",
+  "rueNom": "Place de l'Église",
+  "periode": "Vers 1990",
+  "famille": null,
+  "theme": "Patrimoine",
+  "image": "images/place-eglise-1990.jpeg"
+},
+{
+  "title": "Le \"p'tit curé\" sourcillait face aux libérateurs américains et aux jeunes filles les plus libérées",
+  "file": "Article-ptit-cure-liberateurs.html",
+  "rueId": "presbytere",
+  "rueNom": "Presbytère de Melen",
+  "periode": "Seconde Guerre mondiale",
+  "famille": "Malvaux",
+  "theme": "Résistance",
+  "image": "images/leon-malvaux-presbytere.jpeg"
 }
 ]
