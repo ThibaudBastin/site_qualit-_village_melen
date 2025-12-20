@@ -105,6 +105,29 @@ section h2 {
   border-radius: 5px;
 }
 
+.article-map-link {
+  margin-top: 40px;
+  text-align: center;
+}
+
+.map-button {
+  display: inline-block;
+  padding: 12px 20px;
+  background-color: var(--primary);
+  color: white;
+  text-decoration: none;
+  border-radius: 6px;
+  font-weight: bold;
+  transition: background-color 0.2s ease;
+}
+
+.map-button:hover {
+  background-color: #24574a;
+}
+
+
+
+
 /* ========== Filters ========== */
 .filters {
   display: flex;
