@@ -88,5 +88,37 @@
   "famille": "Malvaux",
   "theme": "Résistance",
   "image": "images/leon-malvaux-presbytere.jpeg"
+},
+{
+  "title": "L'ancêtre classé de la place est vendu pour 10 francs",
+  "file": "Article-ancetre-classe-place.html",
+  "rueId": "place-eglise",
+  "rueNom": "Place de l'Église",
+  "periode": "18e–20e siècle",
+  "famille": "Chaineux",
+  "theme": "Patrimoine",
+  "image": "images/abattage-chene-liberte.jpeg"
+},
+{
+  "title": "L'arbre Biscuit : un charmant charme au nom mystérieux",
+  "file": "Article-arbre-biscuit.html",
+  "rueId": "bois-halleux",
+  "rueNom": "Bois de Halleux",
+  "periode": "XXe siècle",
+  "famille": null,
+  "theme": "Patrimoine naturel",
+  "image": "images/arbre-biscuit-bois-halleux.jpeg"
+},
+{
+  "title": "L’amoureux avait de la galette et des biscuits",
+  "file": "Article-amoureux-galette-biscuits.html",
+  "rueId": "bois-halleux",
+  "rueNom": "Bois de Halleux",
+  "periode": "XVIIIe–XIXe siècle",
+  "famille": null,
+  "theme": "Légendes locales",
+  "image": "images/arbre-biscuit-bois-halleux2.jpeg"
 }
+
+
 ]
