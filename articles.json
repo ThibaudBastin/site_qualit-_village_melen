@@ -7,7 +7,8 @@
     "periode": "18e–20e siècle",
     "famille": null,
     "theme": "Patrimoine",
-    "image": "images/vieux_chene.jpeg"
+    "image": "images/vieux_chene.jpeg",
+    "video": null
   },
   {
     "title": "Mini-révolution mélinoise pour le bac à l'eau de Reux",
@@ -17,7 +18,8 @@
     "periode": "Début 20e siècle",
     "famille": null,
     "theme": "Vie quotidienne",
-    "image": "images/bac_reux.jpeg"
+    "image": "images/bac_reux.jpeg",
+    "video": null
   },
   {
     "title": "Une petite juive cachée rue Louis Pasteur",
@@ -27,7 +29,8 @@
     "periode": "Seconde Guerre mondiale",
     "famille": "Fafchamps",
     "theme": "Résistance",
-    "image": "images/rue-louis-pasteur.jpeg"
+    "image": "images/rue-louis-pasteur.jpeg",
+    "video": null
   },
   {
     "title": "Le p'tit curé a aidé à sauver des enfants juifs",
@@ -37,7 +40,8 @@
     "periode": "Seconde Guerre mondiale",
     "famille": "Malvaux",
     "theme": "Résistance",
-    "image": null
+    "image": null,
+    "video": null
   },
     {
     "title": "Un « petit Juif » caché qui chantait trop et près des Allemands",
@@ -47,7 +51,8 @@
     "periode": "1943-44",
     "famille": null,
     "theme": "Résistance",
-    "image": "images/ferme-des-chenes.jpeg"
+    "image": "images/ferme-des-chenes.jpeg",
+    "video": null
   },
   {
     "title": "Le vieux et le nouveau chêne",
@@ -57,7 +62,8 @@
     "periode": "18e–20e siècle",
     "famille": null,
     "theme": "Patrimoine",
-    "image": "images/nouveau-chene-place-eglise.jpeg"
+    "image": "images/nouveau-chene-place-eglise.jpeg",
+    "video": null
   },
   {
   "title": "Louis et Léonard, les petits Juifs cachés rue Haute",
@@ -67,17 +73,19 @@
   "periode": "1943-44",
   "famille": null,
   "theme": "Résistance",
-  "image": "images/rue-haute1.jpeg"
+  "image": "images/rue-haute1.jpeg",
+  "video": null
 },
 {
   "title": "Plus de pompe, mais des robiniers sur la place",
   "file": "Article-plus-de-pompe-robiniers.html",
   "rueId": "place-eglise",
-  "rueNom": "Place de l'Église",
+  "rueNom": "Place de l'église",
   "periode": "Vers 1990",
   "famille": null,
   "theme": "Patrimoine",
-  "image": "images/place-eglise-1990.jpeg"
+  "image": "images/place-eglise-1990.jpeg",
+  "video": null
 },
 {
   "title": "Le \"p'tit curé\" sourcillait face aux libérateurs américains et aux jeunes filles les plus libérées",
@@ -87,17 +95,19 @@
   "periode": "Seconde Guerre mondiale",
   "famille": "Malvaux",
   "theme": "Résistance",
-  "image": "images/leon-malvaux-presbytere.jpeg"
+  "image": "images/leon-malvaux-presbytere.jpeg",
+  "video": null
 },
 {
   "title": "L'ancêtre classé de la place est vendu pour 10 francs",
   "file": "Article-ancetre-classe-place.html",
   "rueId": "place-eglise",
-  "rueNom": "Place de l'Église",
+  "rueNom": "Place de l'église",
   "periode": "18e–20e siècle",
   "famille": "Chaineux",
   "theme": "Patrimoine",
-  "image": "images/abattage-chene-liberte.jpeg"
+  "image": "images/abattage-chene-liberte.jpeg",
+  "video": null
 },
 {
   "title": "L'arbre Biscuit : un charmant charme au nom mystérieux",
@@ -107,7 +117,8 @@
   "periode": "XXe siècle",
   "famille": null,
   "theme": "Patrimoine naturel",
-  "image": "images/arbre-biscuit-bois-halleux.jpeg"
+  "image": "images/arbre-biscuit-bois-halleux.jpeg",
+  "video": null
 },
 {
   "title": "L’amoureux avait de la galette et des biscuits",
@@ -117,8 +128,46 @@
   "periode": "XVIIIe–XIXe siècle",
   "famille": null,
   "theme": "Légendes locales",
-  "image": "images/arbre-biscuit-bois-halleux2.jpeg"
+  "image": "images/arbre-biscuit-bois-halleux2.jpeg",
+  "video": null
+},
+{
+  "title": "Le coup de chapeau du « p’tit curé » qui offrait ses vélos",
+  "file": "Article-coup-chapeau-petit-cure.html",
+  "rueId": "presbytere",
+  "rueNom": "Presbytère de Melen",
+  "periode": "1943–1989",
+  "famille": "Malvaux",
+  "theme": "Figures locales",
+  "image": "images/leon-malvaux-mobylette.jpeg",
+  "video": null
+},
+{
+  "title": "C’est grâce à ce « p’tit curé » qu’on a tant encensé le grand saint, à Melen",
+  "file": "Article-saint-nicolas-petit-cure.html",
+  "rueId": "presbytere",
+  "rueNom": "Presbytère de Melen",
+  "periode": "Seconde Guerre mondiale",
+  "famille": "Malvaux",
+  "theme": "Vie religieuse",
+  "image": "images/leon-malvaux-1946.jpeg",
+  "video": null
+},
+{
+  "title": "Hit Hit Hourra : on ressuscite le tube qui a émerveillé les élèves mélinois durant 60 ans",
+  "file": "article-hit-hit-hourra.html",
+  "rueId": null,
+  "rueNom": null,
+  "periode": "XXe siècle",
+  "famille": null,
+  "theme": "Vie scolaire",
+  "image": null,
+  "video": "videos/hit-hit-hourra.mp4"
 }
+
+
+
+
 
 
 ]

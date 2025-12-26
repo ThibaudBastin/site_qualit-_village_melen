@@ -56,13 +56,26 @@ function renderArticles(list) {
   list.forEach(a => {
     const div = document.createElement('div');
     div.className = 'article-item';
+    
+    let mediaHtml = '';
+    if (a.image) {
+        mediaHtml = `<img src="${a.image}" alt="${a.title}" class="article-image">`;
+    } else if (a.video) {
+        mediaHtml = `
+        <video class="article-video" controls>
+            <source src="${a.video}" type="video/mp4">
+            Votre navigateur ne supporte pas la vidéo.
+        </video>
+        `;
+    }
+
     const rueLink =
         a.rueId && a.rueNom
         ? `<a href="carte.html?rue=${a.rueId}">📍 ${a.rueNom}</a>`
         : '';
     div.innerHTML = `
     <h3>${a.title}</h3>
-    ${a.image ? `<img src="${a.image}" alt="${a.title}" class="article-image">` : ''}
+    ${mediaHtml}
     <p>
         ${a.rueId ? rueLink + '<br>' : ''}
         ${a.periode ? '🕰 ' + a.periode + '<br>' : ''}
