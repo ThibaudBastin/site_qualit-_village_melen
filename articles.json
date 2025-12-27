@@ -112,8 +112,8 @@
 {
   "title": "L'arbre Biscuit : un charmant charme au nom mystérieux",
   "file": "Article-arbre-biscuit.html",
-  "rueId": "bois-halleux",
-  "rueNom": "Bois de Halleux",
+  "rueId": "arbre-biscuit",
+  "rueNom": "Bois de Halleux – Arbre aux biscuits",
   "periode": "XXe siècle",
   "famille": null,
   "theme": "Patrimoine naturel",
@@ -123,8 +123,8 @@
 {
   "title": "L’amoureux avait de la galette et des biscuits",
   "file": "Article-amoureux-galette-biscuits.html",
-  "rueId": "bois-halleux",
-  "rueNom": "Bois de Halleux",
+  "rueId": "arbre-biscuit",
+  "rueNom": "Bois de Halleux – Arbre aux biscuits",
   "periode": "XVIIIe–XIXe siècle",
   "famille": null,
   "theme": "Légendes locales",
@@ -163,7 +163,19 @@
   "theme": "Vie scolaire",
   "image": null,
   "video": "videos/hit-hit-hourra.mp4"
+},
+{
+  "title": "Un coup de foudre qui laisse sur notre faim",
+  "file": "Article-coup-de-foudre-arbre-biscuit.html",
+  "rueId": "arbre-biscuit",
+  "rueNom": "Bois de Halleux – Arbre aux biscuits",
+  "periode": "Légende contemporaine (2015)",
+  "famille": null,
+  "theme": "Légendes locales",
+  "image": "images/arbre-biscuit-bois-halleux3.jpeg",
+  "video": null
 }
+
 
 
 
