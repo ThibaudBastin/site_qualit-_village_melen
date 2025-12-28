@@ -189,10 +189,13 @@ function populateArticleSelect() {
 }
 
 // Quand on choisit un article
-document.getElementById("articleSelect").addEventListener('change', function(){
+document.getElementById("articleSelect").addEventListener('change', async function(){
   const idx = this.value;
   if(idx==='') return;
+
   const art = articles[idx];
+
+  // Remplir les champs simples
   document.getElementById("title").value = art.title;
   document.getElementById("file").value = art.file;
   document.getElementById("rueNom").value = art.rueNom||'';
@@ -202,15 +205,53 @@ document.getElementById("articleSelect").addEventListener('change', function(){
   document.getElementById("theme").value = art.theme ? options.themes.indexOf(art.theme) : '';
   document.getElementById("image").value = art.image||'';
   document.getElementById("video").value = art.video||'';
-  
-  // Charger le HTML du texte
-  if(art.file){
-    fetch(art.file).then(r=>r.text()).then(txt=>{
-      document.getElementById("content").value = txt.replace(/<[^>]+>/g,'').trim();
-    });
-  }
+
   previewMedia();
+
+  // --- Nouvelle récupération du texte HTML ---
+  if(art.file){
+    try {
+      const response = await fetch(art.file);
+      const htmlText = await response.text();
+      
+      // Parser le HTML
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(htmlText, "text/html");
+
+      // Extraire uniquement le contenu de <section>
+      const section = doc.querySelector("main section");
+      if(section){
+        // Transformer les <p> en texte avec double saut de ligne
+        const paragraphs = Array.from(section.querySelectorAll("p"))
+                                .map(p => p.textContent.trim())
+                                .join("\n\n");
+        document.getElementById("content").value = paragraphs;
+      } else {
+        // Si pas de <section>, récupérer tout le texte
+        document.getElementById("content").value = doc.body.textContent.trim();
+      }
+
+    } catch(e){
+      console.error("Erreur chargement HTML :", e);
+      document.getElementById("content").value = '';
+    }
+  }
 });
+
+function updateArticleInJSON(idx) {
+  const art = articles[idx];
+  art.title = document.getElementById("title").value;
+  art.file = document.getElementById("file").value;
+  art.rueId = options.rues[document.getElementById("rueId").value] || null;
+  art.rueNom = document.getElementById("rueNom").value || null;
+  art.periode = options.periodes[document.getElementById("periode").value] || null;
+  art.famille = options.familles[document.getElementById("famille").value] || null;
+  art.theme = options.themes[document.getElementById("theme").value] || null;
+  art.image = document.getElementById("image").value || null;
+  art.video = document.getElementById("video").value || null;
+}
+
+
 
 // Génération HTML + JSON
 function generate() {
