@@ -7,6 +7,16 @@
 
 <link rel="stylesheet" href="style.css">
 
+  <script>
+    const PASSWORD = "melen1943"; // 🔐 change-le
+
+    const userInput = prompt("Mot de passe requis :");
+    if (userInput !== PASSWORD) {
+      document.write("<h2 style='text-align:center;margin-top:3rem;'>Accès refusé</h2>");
+      throw new Error("Accès refusé");
+    }
+  </script>
+
 <style>
 .form-group { margin-bottom: 1rem; }
 label { font-weight: bold; display: block; margin-bottom: .3rem; }
