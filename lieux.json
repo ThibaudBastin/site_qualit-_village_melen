@@ -1,0 +1,37 @@
+[
+  {
+    "id": "place-eglise",
+    "nom": "Place de l'Église",
+    "coords": [50.646374, 5.736361]
+  },
+  {
+    "id": "rue-reux",
+    "nom": "Rue Reux",
+    "coords": [50.641523, 5.742316]
+  },
+  {
+    "id": "rue-louis-pasteur",
+    "nom": "Rue Louis Pasteur",
+    "coords": [50.635644, 5.734262]
+  },
+  {
+    "id": "rue-haute",
+    "nom": "Rue Haute",
+    "coords": [50.647139, 5.744107]
+  },
+  {
+    "id": "parc-hauzeur",
+    "nom": "Rue du Parc Hauzeur",
+    "coords": [50.638408, 5.749688]
+  },
+  {
+    "id": "presbytere",
+    "nom": "Presbytère de Melen",
+    "coords": [50.646661, 5.737357]
+  },
+  {
+    "id": "arbre-biscuit",
+    "nom": "Bois de Halleux – Arbre aux biscuits",
+    "coords": [50.653536, 5.736958]
+  }
+]

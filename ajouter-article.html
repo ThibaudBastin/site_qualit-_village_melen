@@ -2,147 +2,121 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<title>Ajouter un article – Qualité village Melen</title>
+<title>Administration – Articles</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<link rel="stylesheet" href="style.css">
-
-  <script>
-    const PASSWORD = "melen1943"; // 🔐 change-le
-
-    const userInput = prompt("Mot de passe requis :");
-    if (userInput !== PASSWORD) {
-      document.write("<h2 style='text-align:center;margin-top:3rem;'>Accès refusé</h2>");
-      throw new Error("Accès refusé");
-    }
-  </script>
-
 <style>
-.form-group { margin-bottom: 1rem; }
-label { font-weight: bold; display: block; margin-bottom: .3rem; }
-input, textarea, select { width: 100%; padding: .5rem; }
-button { padding: .6rem 1rem; margin-top: 1rem; cursor: pointer; }
-.preview img, video { max-width: 100%; margin-top: 1rem; border-radius: 6px; }
-iframe { width: 100%; height: 500px; border: 1px solid #ccc; margin-top: 1rem; }
-.downloads a { display: inline-block; margin-right: 1rem; }
+body {
+  font-family: Arial, sans-serif;
+  max-width: 900px;
+  margin: auto;
+  padding: 20px;
+}
+input, textarea {
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 10px;
+}
+textarea { height: 160px; }
+button { padding: 10px; margin-right: 10px; }
+.preview img, .preview video {
+  max-width: 100%;
+  margin-top: 10px;
+}
+.hidden { display:none; }
+hr { margin: 30px 0; }
 </style>
 </head>
 
 <body>
 
-<header>
-  <h1>Ajouter un article</h1>
-</header>
-
-<main>
-<section>
-
-<!-- FORMULAIRE -->
-<div class="form-group">
-  <label>Titre</label>
-  <input id="title">
+<!-- ================= LOGIN ================= -->
+<div id="loginBox">
+  <h2>🔐 Accès administrateur</h2>
+  <input id="pinInput" type="password" placeholder="Code PIN">
+  <button onclick="login()">Connexion</button>
 </div>
 
-<div class="form-group">
-  <label>Nom du fichier HTML</label>
-  <input id="file" placeholder="Article-mon-article.html">
-</div>
+<!-- ================= ADMIN ================= -->
+<div id="adminBox" class="hidden">
 
-<div class="form-group">
-  <label>Rue ID (pour la carte)</label>
-  <input id="rueId" placeholder="place-eglise">
-</div>
-
-<div class="form-group">
-  <label>Nom complet du lieu</label>
-  <input id="rueNom">
-</div>
-
-<div class="form-group">
-  <label>Période</label>
-  <input id="periode">
-</div>
-
-<div class="form-group">
-  <label>Famille (optionnel)</label>
-  <input id="famille">
-</div>
-
-<div class="form-group">
-  <label>Thème</label>
-  <input id="theme">
-</div>
-
-<div class="form-group">
-  <label>Image (chemin)</label>
-  <input id="image" placeholder="images/photo.jpg" oninput="previewMedia()">
-</div>
-
-<div class="form-group">
-  <label>Vidéo (chemin mp4 – optionnel)</label>
-  <input id="video" placeholder="videos/video.mp4" oninput="previewMedia()">
-</div>
-
-<div class="form-group">
-  <label>Texte de l’article</label>
-  <textarea id="content" rows="10"></textarea>
-</div>
-
-<button onclick="generate()">Générer</button>
-
-<!-- PREVIEW MEDIA -->
-<div class="preview" id="mediaPreview"></div>
+<h1>✍️ Ajouter / Modifier un article</h1>
 
 <hr>
 
-<h3>Prévisualisation HTML</h3>
-<iframe id="htmlPreview"></iframe>
+<h2>🗺️ Lieu</h2>
+<input id="rueId" placeholder="Identifiant du lieu (ex: arbre-biscuit)">
+<input id="rueNom" placeholder="Nom du lieu">
+
+<p><strong>NOUVEAU LIEU ?</strong></p>
+<input id="lat" placeholder="Latitude">
+<input id="lng" placeholder="Longitude">
+
+<p><em>Laisse latitude/longitude vides si le lieu existe déjà</em></p>
 
 <hr>
 
-<h3>Fichier JSON</h3>
-<textarea id="jsonOutput" rows="10"></textarea>
+<h2>📝 Article</h2>
+<input id="title" placeholder="Titre">
+<input id="file" placeholder="Fichier HTML (Article-xxx.html)">
+<input id="periode" placeholder="Période">
+<input id="famille" placeholder="Famille (optionnel)">
+<input id="theme" placeholder="Thème">
+<input id="image" placeholder="Chemin image">
+<input id="video" placeholder="Chemin vidéo">
+<textarea id="content" placeholder="Texte de l’article"></textarea>
 
-<h3>Fichier HTML</h3>
-<textarea id="htmlOutput" rows="15"></textarea>
+<div class="preview" id="preview"></div>
 
-<div class="downloads" id="downloads"></div>
+<hr>
 
-</section>
-</main>
+<button onclick="generate()">📦 Générer fichiers</button>
+
+<p>
+<a id="dlHtml" download style="display:none">⬇ HTML article</a><br>
+<a id="dlArticle" download style="display:none">⬇ JSON article</a><br>
+<a id="dlLieux" download style="display:none">⬇ lieux.json (mis à jour)</a>
+</p>
+
+<p><a href="index.html">⬅ Retour au site</a></p>
+
+</div>
 
 <script>
-function previewMedia() {
-  const p = document.getElementById("mediaPreview");
-  p.innerHTML = "";
+/* ================= CONFIG ================= */
+const ADMIN_PIN = "1234";
 
-  if (video.value) {
-    p.innerHTML = `<video controls src="${video.value}"></video>`;
-  } else if (image.value) {
-    p.innerHTML = `<img src="${image.value}">`;
+/* ================= LOGIN ================= */
+function login() {
+  if (pinInput.value === ADMIN_PIN) {
+    localStorage.setItem("admin", "ok");
+    loginBox.classList.add("hidden");
+    adminBox.classList.remove("hidden");
+  } else {
+    alert("Code incorrect");
   }
 }
+if (localStorage.getItem("admin") === "ok") {
+  loginBox.classList.add("hidden");
+  adminBox.classList.remove("hidden");
+}
 
-function generate() {
-
-  const paragraphs = content.value
-    .split(/\n\s*\n/)
-    .map(p => `<p>${p.trim()}</p>`)
-    .join("\n");
-
-  let media = "";
+/* ================= PREVIEW ================= */
+function updatePreview() {
+  preview.innerHTML = "";
   if (video.value) {
-    media = `<video controls><source src="${video.value}" type="video/mp4"></video>`;
+    preview.innerHTML = `<video controls src="${video.value}"></video>`;
   } else if (image.value) {
-    media = `<figure><img src="${image.value}" alt="${title.value}"></figure>`;
+    preview.innerHTML = `<img src="${image.value}">`;
   }
+}
+image.oninput = updatePreview;
+video.oninput = updatePreview;
 
-  const mapBtn = rueId.value
-    ? `<div class="article-map-link">
-         <a href="carte.html?rue=${rueId.value}" class="map-button">📍 Voir ce lieu sur la carte</a>
-       </div>`
-    : "";
+/* ================= GENERATION ================= */
+async function generate() {
 
+  /* === HTML ARTICLE === */
   const html = `<!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -153,56 +127,83 @@ function generate() {
 <body>
 
 <header>
-<h1>Qualité village Melen</h1>
+<h1>Groupement Intercommunal</h1>
 <nav>
 <a href="index.html">Actualités</a>
 <a href="articles.html">Articles</a>
 <a href="carte.html">Carte</a>
-<a href="agenda.html">Agenda</a>
 </nav>
 </header>
 
 <main>
 <section>
 <h2>${title.value}</h2>
-${media}
-${paragraphs}
-${mapBtn}
+
+${video.value
+? `<video controls src="${video.value}"></video>`
+: `<img src="${image.value}" alt="${title.value}">`
+}
+
+<p class="date">${periode.value}</p>
+
+<p>${content.value.replace(/\n/g,"</p><p>")}</p>
+
+<div class="article-map-link">
+<a href="carte.html?rue=${rueId.value}">📍 Voir sur la carte</a>
+</div>
+
 <p><a href="articles.html">← Retour aux articles</a></p>
 </section>
 </main>
 
-<footer>
-<p>© 2025 – Qualité village Melen</p>
-</footer>
-
+<footer><p>© Qualité village Melen</p></footer>
 </body>
 </html>`;
 
-  const json = {
+  /* === JSON ARTICLE === */
+  const articleJson = {
     title: title.value,
     file: file.value,
-    rueId: rueId.value || null,
-    rueNom: rueNom.value || null,
-    periode: periode.value || null,
+    rueId: rueId.value,
+    rueNom: rueNom.value,
+    periode: periode.value,
     famille: famille.value || null,
-    theme: theme.value || null,
+    theme: theme.value,
     image: image.value || null,
     video: video.value || null
   };
 
-  htmlOutput.value = html;
-  jsonOutput.value = JSON.stringify(json, null, 2);
+  /* === TELECHARGEMENTS === */
+  dlHtml.href = URL.createObjectURL(new Blob([html], {type:"text/html"}));
+  dlHtml.download = file.value;
+  dlHtml.style.display = "inline";
 
-  // Preview iframe
-  const iframe = document.getElementById("htmlPreview");
-  iframe.srcdoc = html;
+  dlArticle.href = URL.createObjectURL(
+    new Blob([JSON.stringify(articleJson, null, 2)], {type:"application/json"})
+  );
+  dlArticle.download = file.value.replace(".html",".json");
+  dlArticle.style.display = "inline";
 
-  // Downloads
-  downloads.innerHTML = `
-<a download="${file.value}" href="data:text/html;charset=utf-8,${encodeURIComponent(html)}">⬇ Télécharger HTML</a>
-<a download="${file.value.replace('.html','.json')}" href="data:application/json;charset=utf-8,${encodeURIComponent(JSON.stringify(json,null,2))}">⬇ Télécharger JSON</a>
-`;
+  /* === LIEUX.JSON === */
+  if (lat.value && lng.value) {
+    let lieux = [];
+    try {
+      const res = await fetch("lieux.json");
+      lieux = await res.json();
+    } catch {}
+
+    lieux.push({
+      id: rueId.value,
+      nom: rueNom.value,
+      coords: [parseFloat(lat.value), parseFloat(lng.value)]
+    });
+
+    dlLieux.href = URL.createObjectURL(
+      new Blob([JSON.stringify(lieux, null, 2)], {type:"application/json"})
+    );
+    dlLieux.download = "lieux.json";
+    dlLieux.style.display = "inline";
+  }
 }
 </script>
 

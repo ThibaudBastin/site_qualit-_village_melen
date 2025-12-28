@@ -65,37 +65,42 @@
         }
       });
 
-      const lieux = {
-        "place-eglise": {
-          nom: "Place de l'Église",
-          coords: [50.646374, 5.736361]
-        },
-        "rue-reux": {
-          nom: "Rue Reux",
-          coords: [50.641523, 5.742316]
-        },
-        "rue-louis-pasteur": {
-          nom: "Rue Louis Pasteur",
-          coords: [50.635644, 5.734262]
-        },
-        "rue-haute": {
-          nom: "Rue Haute",
-          coords: [50.647139, 5.744107]
-        },
-        "parc-hauzeur": {
-          nom: "Rue du Parc Hauzeur",
-          coords: [50.638408, 5.749688]
-        },
-        "presbytere": {
-          nom: "Presbytère Melen",
-          coords: [50.646661, 5.737357]
-        },
-        "arbre-biscuit": {
-          nom: "Bois de Halleux (Arbre Biscuit)",
-          coords: [50.653536, 5.736958]
-        }
+fetch('lieux.json')
+  .then(res => res.json())
+  .then(lieux => {
 
-      };
+    // créer les marqueurs
+    lieux.forEach(lieu => {
+
+      const articlesLieu = articles.filter(a => a.rueId === lieu.id);
+
+      let popupHtml = `<strong>${lieu.nom}</strong><br><br>`;
+
+      if (articlesLieu.length > 0) {
+        popupHtml += '<ul>';
+        articlesLieu.forEach(a => {
+          popupHtml += `<li><a href="${a.file}">${a.title}</a></li>`;
+        });
+        popupHtml += '</ul>';
+      } else {
+        popupHtml += `<em>Aucun article pour ce lieu</em>`;
+      }
+
+      L.marker(lieu.coords)
+        .addTo(map)
+        .bindPopup(popupHtml);
+    });
+
+    // Zoom automatique si ?rue=...
+    const params = new URLSearchParams(window.location.search);
+    const rueId = params.get('rue');
+    if (rueId) {
+      const lieu = lieux.find(l => l.id === rueId);
+      if (lieu) map.setView(lieu.coords, 18);
+    }
+
+  });
+
 
       Object.entries(lieux).forEach(([rueId, lieu]) => {
 
