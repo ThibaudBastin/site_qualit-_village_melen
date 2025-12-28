@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Ajouter un article – Qualité village Melen</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link rel="stylesheet" href="style.css">
+
+<style>
+.form-group { margin-bottom: 1rem; }
+label { font-weight: bold; display: block; margin-bottom: .3rem; }
+input, textarea, select { width: 100%; padding: .5rem; }
+button { padding: .6rem 1rem; margin-top: 1rem; cursor: pointer; }
+.preview img, video { max-width: 100%; margin-top: 1rem; border-radius: 6px; }
+iframe { width: 100%; height: 500px; border: 1px solid #ccc; margin-top: 1rem; }
+.downloads a { display: inline-block; margin-right: 1rem; }
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>Ajouter un article</h1>
+</header>
+
+<main>
+<section>
+
+<!-- FORMULAIRE -->
+<div class="form-group">
+  <label>Titre</label>
+  <input id="title">
+</div>
+
+<div class="form-group">
+  <label>Nom du fichier HTML</label>
+  <input id="file" placeholder="Article-mon-article.html">
+</div>
+
+<div class="form-group">
+  <label>Rue ID (pour la carte)</label>
+  <input id="rueId" placeholder="place-eglise">
+</div>
+
+<div class="form-group">
+  <label>Nom complet du lieu</label>
+  <input id="rueNom">
+</div>
+
+<div class="form-group">
+  <label>Période</label>
+  <input id="periode">
+</div>
+
+<div class="form-group">
+  <label>Famille (optionnel)</label>
+  <input id="famille">
+</div>
+
+<div class="form-group">
+  <label>Thème</label>
+  <input id="theme">
+</div>
+
+<div class="form-group">
+  <label>Image (chemin)</label>
+  <input id="image" placeholder="images/photo.jpg" oninput="previewMedia()">
+</div>
+
+<div class="form-group">
+  <label>Vidéo (chemin mp4 – optionnel)</label>
+  <input id="video" placeholder="videos/video.mp4" oninput="previewMedia()">
+</div>
+
+<div class="form-group">
+  <label>Texte de l’article</label>
+  <textarea id="content" rows="10"></textarea>
+</div>
+
+<button onclick="generate()">Générer</button>
+
+<!-- PREVIEW MEDIA -->
+<div class="preview" id="mediaPreview"></div>
+
+<hr>
+
+<h3>Prévisualisation HTML</h3>
+<iframe id="htmlPreview"></iframe>
+
+<hr>
+
+<h3>Fichier JSON</h3>
+<textarea id="jsonOutput" rows="10"></textarea>
+
+<h3>Fichier HTML</h3>
+<textarea id="htmlOutput" rows="15"></textarea>
+
+<div class="downloads" id="downloads"></div>
+
+</section>
+</main>
+
+<script>
+function previewMedia() {
+  const p = document.getElementById("mediaPreview");
+  p.innerHTML = "";
+
+  if (video.value) {
+    p.innerHTML = `<video controls src="${video.value}"></video>`;
+  } else if (image.value) {
+    p.innerHTML = `<img src="${image.value}">`;
+  }
+}
+
+function generate() {
+
+  const paragraphs = content.value
+    .split(/\n\s*\n/)
+    .map(p => `<p>${p.trim()}</p>`)
+    .join("\n");
+
+  let media = "";
+  if (video.value) {
+    media = `<video controls><source src="${video.value}" type="video/mp4"></video>`;
+  } else if (image.value) {
+    media = `<figure><img src="${image.value}" alt="${title.value}"></figure>`;
+  }
+
+  const mapBtn = rueId.value
+    ? `<div class="article-map-link">
+         <a href="carte.html?rue=${rueId.value}" class="map-button">📍 Voir ce lieu sur la carte</a>
+       </div>`
+    : "";
+
+  const html = `<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>${title.value}</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+<h1>Qualité village Melen</h1>
+<nav>
+<a href="index.html">Actualités</a>
+<a href="articles.html">Articles</a>
+<a href="carte.html">Carte</a>
+<a href="agenda.html">Agenda</a>
+</nav>
+</header>
+
+<main>
+<section>
+<h2>${title.value}</h2>
+${media}
+${paragraphs}
+${mapBtn}
+<p><a href="articles.html">← Retour aux articles</a></p>
+</section>
+</main>
+
+<footer>
+<p>© 2025 – Qualité village Melen</p>
+</footer>
+
+</body>
+</html>`;
+
+  const json = {
+    title: title.value,
+    file: file.value,
+    rueId: rueId.value || null,
+    rueNom: rueNom.value || null,
+    periode: periode.value || null,
+    famille: famille.value || null,
+    theme: theme.value || null,
+    image: image.value || null,
+    video: video.value || null
+  };
+
+  htmlOutput.value = html;
+  jsonOutput.value = JSON.stringify(json, null, 2);
+
+  // Preview iframe
+  const iframe = document.getElementById("htmlPreview");
+  iframe.srcdoc = html;
+
+  // Downloads
+  downloads.innerHTML = `
+<a download="${file.value}" href="data:text/html;charset=utf-8,${encodeURIComponent(html)}">⬇ Télécharger HTML</a>
+<a download="${file.value.replace('.html','.json')}" href="data:application/json;charset=utf-8,${encodeURIComponent(JSON.stringify(json,null,2))}">⬇ Télécharger JSON</a>
+`;
+}
+</script>
+
+</body>
+</html>
