@@ -1,13 +1,10 @@
-
-
 <!DOCTYPE html>
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ajouter / Modifier un article – Qualité village Melen</title>
+<title>Modifier un article – Qualité village Melen</title>
 <link rel="stylesheet" href="style.css">
-
 
 <script>
 const PASSWORD = "melen1943";
@@ -17,7 +14,6 @@ if (userInput !== PASSWORD) {
   throw new Error("Accès refusé");
 }
 </script>
-
 
 <style>
 body { font-family: sans-serif; margin: 2rem; }
@@ -33,16 +29,17 @@ iframe { width: 100%; height: 500px; border: 1px solid #ccc; margin-top: 1rem; }
 <body>
 
 <header>
-<h1>Ajouter / Modifier un article</h1>
+<h1>Modifier un article</h1>
 </header>
 
 <main>
 <section>
 
-<!-- Importer un article existant -->
 <div class="form-group">
-  <label>Importer un fichier JSON d'article</label>
-  <input type="file" id="importArticle" accept=".json">
+  <label>Choisir un article à modifier</label>
+  <select id="articleSelect">
+    <option value="">-- Sélectionner un article --</option>
+  </select>
 </div>
 
 <!-- FORMULAIRE -->
@@ -104,9 +101,8 @@ iframe { width: 100%; height: 500px; border: 1px solid #ccc; margin-top: 1rem; }
   <textarea id="content" rows="10"></textarea>
 </div>
 
-<button onclick="generate()">Générer</button>
+<button onclick="generate()">Générer / Mettre à jour</button>
 
-<!-- PREVIEW MEDIA -->
 <div class="preview" id="mediaPreview"></div>
 
 <hr>
@@ -129,14 +125,18 @@ iframe { width: 100%; height: 500px; border: 1px solid #ccc; margin-top: 1rem; }
 
 <script>
 let options = { rues: [], periodes: [], familles: [], themes: [] };
+let articles = [];
 
-// Charger options.json
-fetch('options.json')
-  .then(res => res.json())
-  .then(data => {
-    options = data;
-    populateSelects();
-  });
+// Charger options.json et articles.json
+Promise.all([
+  fetch('options.json').then(r => r.json()),
+  fetch('articles.json').then(r => r.json())
+]).then(([optData, artData]) => {
+  options = optData;
+  articles = artData;
+  populateSelects();
+  populateArticleSelect();
+});
 
 // Remplir les listes déroulantes
 function populateSelects() {
@@ -157,16 +157,14 @@ function fillSelect(id, arr) {
   });
 }
 
+// Ajouter nouvelle option
 function addOption(type) {
-  const inputId = type === 'rue' ? 'newRue' :
-                  type === 'periode' ? 'newPeriode' :
-                  type === 'famille' ? 'newFamille' :
-                  'newTheme';
+  const inputId = type==='rue'?'newRue':type==='periode'?'newPeriode':type==='famille'?'newFamille':'newTheme';
   const val = document.getElementById(inputId).value.trim();
-  if (!val) return;
-  options[type + (type==='rue'?'s':type==='theme'?'s':'')]?.push(val);
+  if(!val) return;
+  options[type + (type==='rue'?'s':type==='theme'?'s':'')].push(val);
   populateSelects();
-  document.getElementById(inputId).value = '';
+  document.getElementById(inputId).value='';
 }
 
 // Prévisualisation média
@@ -178,6 +176,41 @@ function previewMedia() {
   if (vidVal) p.innerHTML = `<video controls src="${vidVal}"></video>`;
   else if (imgVal) p.innerHTML = `<img src="${imgVal}">`;
 }
+
+// Préparer menu des articles
+function populateArticleSelect() {
+  const sel = document.getElementById("articleSelect");
+  articles.forEach((art,i)=>{
+    const opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = art.title;
+    sel.appendChild(opt);
+  });
+}
+
+// Quand on choisit un article
+document.getElementById("articleSelect").addEventListener('change', function(){
+  const idx = this.value;
+  if(idx==='') return;
+  const art = articles[idx];
+  document.getElementById("title").value = art.title;
+  document.getElementById("file").value = art.file;
+  document.getElementById("rueNom").value = art.rueNom||'';
+  document.getElementById("rueId").value = art.rueId ? options.rues.indexOf(art.rueId) : '';
+  document.getElementById("periode").value = art.periode ? options.periodes.indexOf(art.periode) : '';
+  document.getElementById("famille").value = art.famille ? options.familles.indexOf(art.famille) : '';
+  document.getElementById("theme").value = art.theme ? options.themes.indexOf(art.theme) : '';
+  document.getElementById("image").value = art.image||'';
+  document.getElementById("video").value = art.video||'';
+  
+  // Charger le HTML du texte
+  if(art.file){
+    fetch(art.file).then(r=>r.text()).then(txt=>{
+      document.getElementById("content").value = txt.replace(/<[^>]+>/g,'').trim();
+    });
+  }
+  previewMedia();
+});
 
 // Génération HTML + JSON
 function generate() {
@@ -195,8 +228,8 @@ function generate() {
   const paragraphs = cont.split(/\n\s*\n/).map(p=>`<p>${p.trim()}</p>`).join("\n");
 
   let media = "";
-  if (vid) media = `<video controls><source src="${vid}" type="video/mp4"></video>`;
-  else if (img) media = `<figure><img src="${img}" alt="${t}"></figure>`;
+  if(vid) media = `<video controls><source src="${vid}" type="video/mp4"></video>`;
+  else if(img) media = `<figure><img src="${img}" alt="${t}"></figure>`;
 
   const mapBtn = rId ? `<div class="article-map-link"><a href="carte.html?rue=${options.rues[rId]}" class="map-button">📍 Voir ce lieu sur la carte</a></div>` : "";
 
@@ -215,16 +248,16 @@ function generate() {
     title: t,
     file: f,
     rueId: rId ? options.rues[rId] : null,
-    rueNom: rNom || null,
+    rueNom: rNom||null,
     periode: peri ? options.periodes[peri] : null,
     famille: fam ? options.familles[fam] : null,
     theme: th ? options.themes[th] : null,
-    image: img || null,
-    video: vid || null
+    image: img||null,
+    video: vid||null
   };
 
   document.getElementById("htmlPreview").srcdoc = html;
-  document.getElementById("jsonOutput").value = JSON.stringify(json, null, 2);
+  document.getElementById("jsonOutput").value = JSON.stringify(json,null,2);
   document.getElementById("htmlOutput").value = html;
 
   document.getElementById("downloads").innerHTML = `
@@ -232,28 +265,6 @@ function generate() {
 <a download="${f.replace('.html','.json')}" href="data:application/json;charset=utf-8,${encodeURIComponent(JSON.stringify(json,null,2))}">⬇ Télécharger JSON</a>
 `;
 }
-
-// Importer un article existant
-document.getElementById("importArticle").addEventListener("change", function(e){
-  const file = e.target.files[0];
-  if(!file) return;
-  const reader = new FileReader();
-  reader.onload = function(ev) {
-    const art = JSON.parse(ev.target.result);
-    document.getElementById("title").value = art.title;
-    document.getElementById("file").value = art.file;
-    document.getElementById("rueNom").value = art.rueNom || '';
-    document.getElementById("rueId").value = art.rueId ? options.rues.indexOf(art.rueId) : '';
-    document.getElementById("periode").value = art.periode ? options.periodes.indexOf(art.periode) : '';
-    document.getElementById("famille").value = art.famille ? options.familles.indexOf(art.famille) : '';
-    document.getElementById("theme").value = art.theme ? options.themes.indexOf(art.theme) : '';
-    document.getElementById("image").value = art.image || '';
-    document.getElementById("video").value = art.video || '';
-    document.getElementById("content").value = ""; // texte à remplir manuellement
-    previewMedia();
-  };
-  reader.readAsText(file);
-});
 </script>
 </body>
 </html>
