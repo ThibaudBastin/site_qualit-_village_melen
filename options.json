@@ -1,0 +1,37 @@
+{
+  "rues": [
+    { "id": "place-eglise", "nom": "Place de l'église" },
+    { "id": "rue-reux", "nom": "Rue Reux" },
+    { "id": "rue-louis-pasteur", "nom": "Rue Louis Pasteur" },
+    { "id": "rue-haute", "nom": "Rue Haute" },
+    { "id": "parc-hauzeur", "nom": "Rue du Parc Hauzeur" },
+    { "id": "presbytere", "nom": "Presbytère de Melen" },
+    { "id": "arbre-biscuit", "nom": "Bois de Halleux – Arbre aux biscuits" }
+  ],
+  "periodes": [
+    "18e–20e siècle",
+    "Début 20e siècle",
+    "Seconde Guerre mondiale",
+    "1943-44",
+    "Vers 1990",
+    "XXe siècle",
+    "XVIIIe–XIXe siècle",
+    "1943–1989",
+    "Légende contemporaine (2015)"
+  ],
+  "familles": [
+    "Fafchamps",
+    "Malvaux",
+    "Chaineux"
+  ],
+  "themes": [
+    "Patrimoine",
+    "Vie quotidienne",
+    "Résistance",
+    "Patrimoine naturel",
+    "Légendes locales",
+    "Figures locales",
+    "Vie religieuse",
+    "Vie scolaire"
+  ]
+}

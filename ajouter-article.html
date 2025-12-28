@@ -1,43 +1,51 @@
+
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<title>Ajouter un article – Qualité village Melen</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+<title>Ajouter / Modifier un article – Qualité village Melen</title>
 <link rel="stylesheet" href="style.css">
 
-<script>
-  const PASSWORD = "melen1943"; // 🔐 change-le
 
-  const userInput = prompt("Mot de passe requis :");
-  if (userInput !== PASSWORD) {
-    document.write("<h2 style='text-align:center;margin-top:3rem;'>Accès refusé</h2>");
-    throw new Error("Accès refusé");
-  }
+<script>
+const PASSWORD = "melen1943";
+const userInput = prompt("Mot de passe requis :");
+if (userInput !== PASSWORD) {
+  document.write("<h2 style='text-align:center;margin-top:3rem;'>Accès refusé</h2>");
+  throw new Error("Accès refusé");
+}
 </script>
 
+
 <style>
+body { font-family: sans-serif; margin: 2rem; }
 .form-group { margin-bottom: 1rem; }
 label { font-weight: bold; display: block; margin-bottom: .3rem; }
 input, textarea, select { width: 100%; padding: .5rem; }
 button { padding: .6rem 1rem; margin-top: 1rem; cursor: pointer; }
 .preview img, video { max-width: 100%; margin-top: 1rem; border-radius: 6px; }
 iframe { width: 100%; height: 500px; border: 1px solid #ccc; margin-top: 1rem; }
-.downloads a { display: inline-block; margin-right: 1rem; }
+.downloads a { display: inline-block; margin-right: 1rem; margin-top: .5rem; }
 </style>
 </head>
-
 <body>
 
 <header>
-  <h1>Ajouter un article</h1>
+<h1>Ajouter / Modifier un article</h1>
 </header>
 
 <main>
 <section>
 
-<!-- FORMULAIRE ARTICLE -->
+<!-- Importer un article existant -->
+<div class="form-group">
+  <label>Importer un fichier JSON d'article</label>
+  <input type="file" id="importArticle" accept=".json">
+</div>
+
+<!-- FORMULAIRE -->
 <div class="form-group">
   <label>Titre</label>
   <input id="title">
@@ -49,8 +57,10 @@ iframe { width: 100%; height: 500px; border: 1px solid #ccc; margin-top: 1rem; }
 </div>
 
 <div class="form-group">
-  <label>Rue ID (pour la carte)</label>
-  <input id="rueId" placeholder="place-eglise">
+  <label>Rue (ID)</label>
+  <select id="rueId"></select>
+  <input id="newRue" placeholder="Nouvelle rue ID" style="margin-top:.5rem;">
+  <button onclick="addOption('rue')">Ajouter nouvelle rue</button>
 </div>
 
 <div class="form-group">
@@ -59,28 +69,24 @@ iframe { width: 100%; height: 500px; border: 1px solid #ccc; margin-top: 1rem; }
 </div>
 
 <div class="form-group">
-  <label>Latitude</label>
-  <input id="lat" placeholder="50.601">
-</div>
-
-<div class="form-group">
-  <label>Longitude</label>
-  <input id="lng" placeholder="5.851">
-</div>
-
-<div class="form-group">
   <label>Période</label>
-  <input id="periode">
+  <select id="periode"></select>
+  <input id="newPeriode" placeholder="Nouvelle période" style="margin-top:.5rem;">
+  <button onclick="addOption('periode')">Ajouter nouvelle période</button>
 </div>
 
 <div class="form-group">
-  <label>Famille (optionnel)</label>
-  <input id="famille">
+  <label>Famille</label>
+  <select id="famille"></select>
+  <input id="newFamille" placeholder="Nouvelle famille" style="margin-top:.5rem;">
+  <button onclick="addOption('famille')">Ajouter nouvelle famille</button>
 </div>
 
 <div class="form-group">
   <label>Thème</label>
-  <input id="theme">
+  <select id="theme"></select>
+  <input id="newTheme" placeholder="Nouveau thème" style="margin-top:.5rem;">
+  <button onclick="addOption('theme')">Ajouter nouveau thème</button>
 </div>
 
 <div class="form-group">
@@ -110,14 +116,11 @@ iframe { width: 100%; height: 500px; border: 1px solid #ccc; margin-top: 1rem; }
 
 <hr>
 
-<h3>Fichier JSON Article</h3>
+<h3>Fichier JSON</h3>
 <textarea id="jsonOutput" rows="10"></textarea>
 
 <h3>Fichier HTML</h3>
 <textarea id="htmlOutput" rows="15"></textarea>
-
-<h3>Fichier JSON Lieux</h3>
-<textarea id="jsonLieuxOutput" rows="10"></textarea>
 
 <div class="downloads" id="downloads"></div>
 
@@ -125,110 +128,132 @@ iframe { width: 100%; height: 500px; border: 1px solid #ccc; margin-top: 1rem; }
 </main>
 
 <script>
+let options = { rues: [], periodes: [], familles: [], themes: [] };
+
+// Charger options.json
+fetch('options.json')
+  .then(res => res.json())
+  .then(data => {
+    options = data;
+    populateSelects();
+  });
+
+// Remplir les listes déroulantes
+function populateSelects() {
+  fillSelect('rueId', options.rues);
+  fillSelect('periode', options.periodes);
+  fillSelect('famille', options.familles);
+  fillSelect('theme', options.themes);
+}
+
+function fillSelect(id, arr) {
+  const sel = document.getElementById(id);
+  sel.innerHTML = '<option value="">-- choisir --</option>';
+  arr.forEach((item, i) => {
+    const opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = item;
+    sel.appendChild(opt);
+  });
+}
+
+function addOption(type) {
+  const inputId = type === 'rue' ? 'newRue' :
+                  type === 'periode' ? 'newPeriode' :
+                  type === 'famille' ? 'newFamille' :
+                  'newTheme';
+  const val = document.getElementById(inputId).value.trim();
+  if (!val) return;
+  options[type + (type==='rue'?'s':type==='theme'?'s':'')]?.push(val);
+  populateSelects();
+  document.getElementById(inputId).value = '';
+}
+
+// Prévisualisation média
 function previewMedia() {
   const p = document.getElementById("mediaPreview");
   p.innerHTML = "";
-
-  if (video.value) {
-    p.innerHTML = `<video controls src="${video.value}"></video>`;
-  } else if (image.value) {
-    p.innerHTML = `<img src="${image.value}">`;
-  }
+  const imgVal = document.getElementById("image").value;
+  const vidVal = document.getElementById("video").value;
+  if (vidVal) p.innerHTML = `<video controls src="${vidVal}"></video>`;
+  else if (imgVal) p.innerHTML = `<img src="${imgVal}">`;
 }
 
+// Génération HTML + JSON
 function generate() {
-  // Génération HTML article
-  const paragraphs = content.value
-    .split(/\n\s*\n/)
-    .map(p => `<p>${p.trim()}</p>`)
-    .join("\n");
+  const t = document.getElementById("title").value;
+  const f = document.getElementById("file").value;
+  const rId = document.getElementById("rueId").value;
+  const rNom = document.getElementById("rueNom").value;
+  const peri = document.getElementById("periode").value;
+  const fam = document.getElementById("famille").value;
+  const th = document.getElementById("theme").value;
+  const img = document.getElementById("image").value;
+  const vid = document.getElementById("video").value;
+  const cont = document.getElementById("content").value;
+
+  const paragraphs = cont.split(/\n\s*\n/).map(p=>`<p>${p.trim()}</p>`).join("\n");
 
   let media = "";
-  if (video.value) {
-    media = `<video controls><source src="${video.value}" type="video/mp4"></video>`;
-  } else if (image.value) {
-    media = `<figure><img src="${image.value}" alt="${title.value}"></figure>`;
-  }
+  if (vid) media = `<video controls><source src="${vid}" type="video/mp4"></video>`;
+  else if (img) media = `<figure><img src="${img}" alt="${t}"></figure>`;
 
-  const mapBtn = rueId.value
-    ? `<div class="article-map-link">
-         <a href="carte.html?rue=${rueId.value}" class="map-button">📍 Voir ce lieu sur la carte</a>
-       </div>`
-    : "";
+  const mapBtn = rId ? `<div class="article-map-link"><a href="carte.html?rue=${options.rues[rId]}" class="map-button">📍 Voir ce lieu sur la carte</a></div>` : "";
 
   const html = `<!DOCTYPE html>
 <html lang="fr">
-<head>
-<meta charset="UTF-8">
-<title>${title.value}</title>
-<link rel="stylesheet" href="style.css">
-</head>
+<head><meta charset="UTF-8"><title>${t}</title><link rel="stylesheet" href="style.css"></head>
 <body>
+<header><h1>Qualité village Melen</h1>
+<nav><a href="index.html">Actualités</a><a href="articles.html">Articles</a><a href="carte.html">Carte</a><a href="agenda.html">Agenda</a></nav></header>
+<main><section><h2>${t}</h2>${media}${paragraphs}${mapBtn}
+<p><a href="articles.html">← Retour aux articles</a></p></section></main>
+<footer><p>© 2025 – Qualité village Melen</p></footer>
+</body></html>`;
 
-<header>
-<h1>Qualité village Melen</h1>
-<nav>
-<a href="index.html">Actualités</a>
-<a href="articles.html">Articles</a>
-<a href="carte.html">Carte</a>
-<a href="agenda.html">Agenda</a>
-</nav>
-</header>
-
-<main>
-<section>
-<h2>${title.value}</h2>
-${media}
-${paragraphs}
-${mapBtn}
-<p><a href="articles.html">← Retour aux articles</a></p>
-</section>
-</main>
-
-<footer>
-<p>© 2025 – Qualité village Melen</p>
-</footer>
-
-</body>
-</html>`;
-
-  const jsonArticle = {
-    title: title.value,
-    file: file.value,
-    rueId: rueId.value || null,
-    rueNom: rueNom.value || null,
-    periode: periode.value || null,
-    famille: famille.value || null,
-    theme: theme.value || null,
-    image: image.value || null,
-    video: video.value || null
+  const json = {
+    title: t,
+    file: f,
+    rueId: rId ? options.rues[rId] : null,
+    rueNom: rNom || null,
+    periode: peri ? options.periodes[peri] : null,
+    famille: fam ? options.familles[fam] : null,
+    theme: th ? options.themes[th] : null,
+    image: img || null,
+    video: vid || null
   };
 
-  // Génération JSON lieux
-  let jsonLieux = [];
-  if(rueId.value && rueNom.value && lat.value && lng.value) {
-    jsonLieux.push({
-      id: rueId.value,
-      nom: rueNom.value,
-      coords: [parseFloat(lat.value), parseFloat(lng.value)]
-    });
-  }
-
-  htmlOutput.value = html;
-  jsonOutput.value = JSON.stringify(jsonArticle, null, 2);
-  jsonLieuxOutput.value = JSON.stringify(jsonLieux, null, 2);
-
-  // Preview iframe
   document.getElementById("htmlPreview").srcdoc = html;
+  document.getElementById("jsonOutput").value = JSON.stringify(json, null, 2);
+  document.getElementById("htmlOutput").value = html;
 
-  // Downloads
-  downloads.innerHTML = `
-<a download="${file.value}" href="data:text/html;charset=utf-8,${encodeURIComponent(html)}">⬇ Télécharger HTML</a>
-<a download="${file.value.replace('.html','.json')}" href="data:application/json;charset=utf-8,${encodeURIComponent(JSON.stringify(jsonArticle,null,2))}">⬇ Télécharger JSON Article</a>
-<a download="lieux.json" href="data:application/json;charset=utf-8,${encodeURIComponent(JSON.stringify(jsonLieux,null,2))}">⬇ Télécharger JSON Lieux</a>
+  document.getElementById("downloads").innerHTML = `
+<a download="${f}" href="data:text/html;charset=utf-8,${encodeURIComponent(html)}">⬇ Télécharger HTML</a>
+<a download="${f.replace('.html','.json')}" href="data:application/json;charset=utf-8,${encodeURIComponent(JSON.stringify(json,null,2))}">⬇ Télécharger JSON</a>
 `;
 }
-</script>
 
+// Importer un article existant
+document.getElementById("importArticle").addEventListener("change", function(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    const art = JSON.parse(ev.target.result);
+    document.getElementById("title").value = art.title;
+    document.getElementById("file").value = art.file;
+    document.getElementById("rueNom").value = art.rueNom || '';
+    document.getElementById("rueId").value = art.rueId ? options.rues.indexOf(art.rueId) : '';
+    document.getElementById("periode").value = art.periode ? options.periodes.indexOf(art.periode) : '';
+    document.getElementById("famille").value = art.famille ? options.familles.indexOf(art.famille) : '';
+    document.getElementById("theme").value = art.theme ? options.themes.indexOf(art.theme) : '';
+    document.getElementById("image").value = art.image || '';
+    document.getElementById("video").value = art.video || '';
+    document.getElementById("content").value = ""; // texte à remplir manuellement
+    previewMedia();
+  };
+  reader.readAsText(file);
+});
+</script>
 </body>
 </html>

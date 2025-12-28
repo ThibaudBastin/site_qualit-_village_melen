@@ -2,184 +2,161 @@
   {
     "title": "Le vieux chêne, branlant, mais star à Melen",
     "file": "article-vieux-chene.html",
-    "rueId": "place-eglise",           
-    "rueNom": "Place de l'église",
-    "periode": "18e–20e siècle",
+    "rueId": 0,
+    "periode": 0,
     "famille": null,
-    "theme": "Patrimoine",
+    "theme": 0,
     "image": "images/vieux_chene.jpeg",
     "video": null
   },
   {
     "title": "Mini-révolution mélinoise pour le bac à l'eau de Reux",
     "file": "article-bac-reux.html",
-    "rueId": "rue-reux",           
-    "rueNom": "Rue Reux",
-    "periode": "Début 20e siècle",
+    "rueId": 1,
+    "periode": 1,
     "famille": null,
-    "theme": "Vie quotidienne",
+    "theme": 1,
     "image": "images/bac_reux.jpeg",
     "video": null
   },
   {
     "title": "Une petite juive cachée rue Louis Pasteur",
     "file": "Article-petite-juive-cachee.html",
-    "rueId": "rue-louis-pasteur",           
-    "rueNom": "Rue Louis Pasteur",
-    "periode": "Seconde Guerre mondiale",
-    "famille": "Fafchamps",
-    "theme": "Résistance",
+    "rueId": 2,
+    "periode": 2,
+    "famille": 0,
+    "theme": 2,
     "image": "images/rue-louis-pasteur.jpeg",
     "video": null
   },
   {
     "title": "Le p'tit curé a aidé à sauver des enfants juifs",
     "file": "Article-ptit-cure-video.html",
-    "rueId": null,   
-    "rueNom": null,
-    "periode": "Seconde Guerre mondiale",
-    "famille": "Malvaux",
-    "theme": "Résistance",
+    "rueId": null,
+    "periode": 2,
+    "famille": 1,
+    "theme": 2,
     "image": null,
     "video": null
   },
-    {
+  {
     "title": "Un « petit Juif » caché qui chantait trop et près des Allemands",
     "file": "Article-petit-juif-chanter.html",
-    "rueId": "parc-hauzeur",          
-    "rueNom": "Rue du Parc Hauzeur",
-    "periode": "1943-44",
+    "rueId": 4,
+    "periode": 3,
     "famille": null,
-    "theme": "Résistance",
+    "theme": 2,
     "image": "images/ferme-des-chenes.jpeg",
     "video": null
   },
   {
     "title": "Le vieux et le nouveau chêne",
     "file": "Article-vieux-nouveau-chene.html",
-    "rueId": "place-eglise",          
-    "rueNom": "Place de l'église",
-    "periode": "18e–20e siècle",
+    "rueId": 0,
+    "periode": 0,
     "famille": null,
-    "theme": "Patrimoine",
+    "theme": 0,
     "image": "images/nouveau-chene-place-eglise.jpeg",
     "video": null
   },
   {
-  "title": "Louis et Léonard, les petits Juifs cachés rue Haute",
-  "file": "Article-louis-leonard.html",
-  "rueId": "rue-haute",         
-  "rueNom": "Rue Haute",
-  "periode": "1943-44",
-  "famille": null,
-  "theme": "Résistance",
-  "image": "images/rue-haute1.jpeg",
-  "video": null
-},
-{
-  "title": "Plus de pompe, mais des robiniers sur la place",
-  "file": "Article-plus-de-pompe-robiniers.html",
-  "rueId": "place-eglise",
-  "rueNom": "Place de l'église",
-  "periode": "Vers 1990",
-  "famille": null,
-  "theme": "Patrimoine",
-  "image": "images/place-eglise-1990.jpeg",
-  "video": null
-},
-{
-  "title": "Le \"p'tit curé\" sourcillait face aux libérateurs américains et aux jeunes filles les plus libérées",
-  "file": "Article-ptit-cure-liberateurs.html",
-  "rueId": "presbytere",
-  "rueNom": "Presbytère de Melen",
-  "periode": "Seconde Guerre mondiale",
-  "famille": "Malvaux",
-  "theme": "Résistance",
-  "image": "images/leon-malvaux-presbytere.jpeg",
-  "video": null
-},
-{
-  "title": "L'ancêtre classé de la place est vendu pour 10 francs",
-  "file": "Article-ancetre-classe-place.html",
-  "rueId": "place-eglise",
-  "rueNom": "Place de l'église",
-  "periode": "18e–20e siècle",
-  "famille": "Chaineux",
-  "theme": "Patrimoine",
-  "image": "images/abattage-chene-liberte.jpeg",
-  "video": null
-},
-{
-  "title": "L'arbre Biscuit : un charmant charme au nom mystérieux",
-  "file": "Article-arbre-biscuit.html",
-  "rueId": "arbre-biscuit",
-  "rueNom": "Bois de Halleux – Arbre aux biscuits",
-  "periode": "XXe siècle",
-  "famille": null,
-  "theme": "Patrimoine naturel",
-  "image": "images/arbre-biscuit-bois-halleux.jpeg",
-  "video": null
-},
-{
-  "title": "L’amoureux avait de la galette et des biscuits",
-  "file": "Article-amoureux-galette-biscuits.html",
-  "rueId": "arbre-biscuit",
-  "rueNom": "Bois de Halleux – Arbre aux biscuits",
-  "periode": "XVIIIe–XIXe siècle",
-  "famille": null,
-  "theme": "Légendes locales",
-  "image": "images/arbre-biscuit-bois-halleux2.jpeg",
-  "video": null
-},
-{
-  "title": "Le coup de chapeau du « p’tit curé » qui offrait ses vélos",
-  "file": "Article-coup-chapeau-petit-cure.html",
-  "rueId": "presbytere",
-  "rueNom": "Presbytère de Melen",
-  "periode": "1943–1989",
-  "famille": "Malvaux",
-  "theme": "Figures locales",
-  "image": "images/leon-malvaux-mobylette.jpeg",
-  "video": null
-},
-{
-  "title": "C’est grâce à ce « p’tit curé » qu’on a tant encensé le grand saint, à Melen",
-  "file": "Article-saint-nicolas-petit-cure.html",
-  "rueId": "presbytere",
-  "rueNom": "Presbytère de Melen",
-  "periode": "Seconde Guerre mondiale",
-  "famille": "Malvaux",
-  "theme": "Vie religieuse",
-  "image": "images/leon-malvaux-1946.jpeg",
-  "video": null
-},
-{
-  "title": "Hit Hit Hourra : on ressuscite le tube qui a émerveillé les élèves mélinois durant 60 ans",
-  "file": "article-hit-hit-hourra.html",
-  "rueId": null,
-  "rueNom": null,
-  "periode": "XXe siècle",
-  "famille": null,
-  "theme": "Vie scolaire",
-  "image": null,
-  "video": "videos/hit-hit-hourra.mp4"
-},
-{
-  "title": "Un coup de foudre qui laisse sur notre faim",
-  "file": "Article-coup-de-foudre-arbre-biscuit.html",
-  "rueId": "arbre-biscuit",
-  "rueNom": "Bois de Halleux – Arbre aux biscuits",
-  "periode": "Légende contemporaine (2015)",
-  "famille": null,
-  "theme": "Légendes locales",
-  "image": "images/arbre-biscuit-bois-halleux3.jpeg",
-  "video": null
-}
-
-
-
-
-
-
-
+    "title": "Louis et Léonard, les petits Juifs cachés rue Haute",
+    "file": "Article-louis-leonard.html",
+    "rueId": 3,
+    "periode": 3,
+    "famille": null,
+    "theme": 2,
+    "image": "images/rue-haute1.jpeg",
+    "video": null
+  },
+  {
+    "title": "Plus de pompe, mais des robiniers sur la place",
+    "file": "Article-plus-de-pompe-robiniers.html",
+    "rueId": 0,
+    "periode": 4,
+    "famille": null,
+    "theme": 0,
+    "image": "images/place-eglise-1990.jpeg",
+    "video": null
+  },
+  {
+    "title": "Le \"p'tit curé\" sourcillait face aux libérateurs américains et aux jeunes filles les plus libérées",
+    "file": "Article-ptit-cure-liberateurs.html",
+    "rueId": 5,
+    "periode": 2,
+    "famille": 1,
+    "theme": 2,
+    "image": "images/leon-malvaux-presbytere.jpeg",
+    "video": null
+  },
+  {
+    "title": "L'ancêtre classé de la place est vendu pour 10 francs",
+    "file": "Article-ancetre-classe-place.html",
+    "rueId": 0,
+    "periode": 0,
+    "famille": 2,
+    "theme": 0,
+    "image": "images/abattage-chene-liberte.jpeg",
+    "video": null
+  },
+  {
+    "title": "L'arbre Biscuit : un charmant charme au nom mystérieux",
+    "file": "Article-arbre-biscuit.html",
+    "rueId": 6,
+    "periode": 5,
+    "famille": null,
+    "theme": 3,
+    "image": "images/arbre-biscuit-bois-halleux.jpeg",
+    "video": null
+  },
+  {
+    "title": "L’amoureux avait de la galette et des biscuits",
+    "file": "Article-amoureux-galette-biscuits.html",
+    "rueId": 6,
+    "periode": 6,
+    "famille": null,
+    "theme": 4,
+    "image": "images/arbre-biscuit-bois-halleux2.jpeg",
+    "video": null
+  },
+  {
+    "title": "Le coup de chapeau du « p’tit curé » qui offrait ses vélos",
+    "file": "Article-coup-chapeau-petit-cure.html",
+    "rueId": 5,
+    "periode": 7,
+    "famille": 1,
+    "theme": 5,
+    "image": "images/leon-malvaux-mobylette.jpeg",
+    "video": null
+  },
+  {
+    "title": "C’est grâce à ce « p’tit curé » qu’on a tant encensé le grand saint, à Melen",
+    "file": "Article-saint-nicolas-petit-cure.html",
+    "rueId": 5,
+    "periode": 2,
+    "famille": 1,
+    "theme": 6,
+    "image": "images/leon-malvaux-1946.jpeg",
+    "video": null
+  },
+  {
+    "title": "Hit Hit Hourra : on ressuscite le tube qui a émerveillé les élèves mélinois durant 60 ans",
+    "file": "article-hit-hit-hourra.html",
+    "rueId": null,
+    "periode": 5,
+    "famille": null,
+    "theme": 7,
+    "image": null,
+    "video": "videos/hit-hit-hourra.mp4"
+  },
+  {
+    "title": "Un coup de foudre qui laisse sur notre faim",
+    "file": "Article-coup-de-foudre-arbre-biscuit.html",
+    "rueId": 6,
+    "periode": 8,
+    "famille": null,
+    "theme": 4,
+    "image": "images/arbre-biscuit-bois-halleux3.jpeg",
+    "video": null
+  }
 ]
