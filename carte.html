@@ -139,7 +139,11 @@
         if (artsForLieu.length) {
           popupHtml += '<ul style="margin:0;padding-left:1rem">';
           artsForLieu.forEach(a => {
-            popupHtml += `<li><a href="${esc(a.file || '#')}">${esc(a.title || 'Sans titre')}</a></li>`;
+            popupHtml += `<li>
+                <a href="article.html?file=${encodeURIComponent(a.file)}">
+                    ${esc(a.title || 'Sans titre')}
+                </a>
+                </li>`;
           });
           popupHtml += '</ul>';
         } else {
