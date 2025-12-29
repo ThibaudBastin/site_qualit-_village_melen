@@ -156,12 +156,41 @@
 
       // show popup for articles without matching lieu
       const sans = articlesByLieu['__sans_lieu'] || [];
-      if (sans.length) {
-        const popupHtml = '<strong>Articles sans lieu associé</strong><br><ul style="margin:0;padding-left:1rem">' +
-          sans.map(a => `<li><a href="${esc(a.file||'#')}">${esc(a.title||'Sans titre')}</a></li>`).join('') +
-          '</ul>';
-        L.popup({ maxWidth: 400 }).setLatLng(map.getCenter()).setContent(popupHtml).openOn(map);
-      }
+
+        if (sans.length) {
+        const btn = L.control({ position: 'topright' });
+
+        btn.onAdd = function () {
+            const div = L.DomUtil.create('div', 'leaflet-bar');
+            div.style.background = '#fff';
+            div.style.padding = '6px';
+            div.style.cursor = 'pointer';
+            div.innerHTML = '📄 Articles sans lieu';
+
+            div.onclick = () => {
+            const html = `
+                <strong>Articles sans lieu associé</strong>
+                <ul style="margin:0;padding-left:1rem">
+                ${sans.map(a =>
+                    `<li>
+                    <a href="article.html?file=${encodeURIComponent(a.file)}">
+                        ${esc(a.title)}
+                    </a>
+                    </li>`
+                ).join('')}
+                </ul>`;
+            L.popup({ maxWidth: 400 })
+                .setLatLng(map.getCenter())
+                .setContent(html)
+                .openOn(map);
+            };
+
+            return div;
+        };
+
+        btn.addTo(map);
+        }
+
 
       // support ?rue=<lieuId> or ?rue=<optionsIndex>
       const params = new URLSearchParams(window.location.search);
