@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Article – Qualité village Melen</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    body{font-family:Arial,Helvetica,sans-serif;margin:0;padding:0}
+    header, footer{background:#2f6f5e;color:#fff;padding:12px}
+    nav a{color:#fff;margin-right:10px;text-decoration:none}
+    main{padding:18px;max-width:900px;margin:0 auto}
+    .article-meta{color:#666;margin-top:12px}
+    .article-fragment img{max-width:100%;height:auto;border-radius:6px}
+    .footer-sources ul{margin:6px 0 0 1.2em;padding:0}
+    .article-nav a{margin-right:8px}
+  </style>
+</head>
+<body>
+<header>
+  <h1>Groupement Intercommunal</h1>
+  <nav>
+    <a href="index.html">Actualités</a>
+    <a href="articles.html">Articles</a>
+    <a href="carte.html">Carte</a>
+    <a href="agenda.html">Agenda</a>
+    <a href="contact.html">Contacts</a>
+  </nav>
+</header>
+
+<main id="articleRoot">
+  <p>Chargement de l’article…</p>
+</main>
+
+<footer id="siteFooter">
+  <p>© 2025 – Qualité village Melen</p>
+</footer>
+
+<script>
+(async function(){
+  const esc = s => String(s ?? '');
+  const params = new URLSearchParams(location.search);
+  const fileParam = params.get('file');
+  const idParam = params.get('id');
+
+  try {
+    const [articlesRes, optionsRes] = await Promise.all([
+      fetch('articles.json'),
+      fetch('options.json').catch(()=>null)
+    ]);
+    const articles = await articlesRes.json();
+    const options = optionsRes ? await optionsRes.json() : {};
+
+    let article = null;
+    if (fileParam) article = (articles||[]).find(a => String(a.file||'') === fileParam) || null;
+    else if (idParam != null && !Number.isNaN(Number(idParam))) article = articles[Number(idParam)] || null;
+    if (!article && articles && articles.length) article = articles[0];
+
+    const root = document.getElementById('articleRoot');
+    const footerEl = document.getElementById('siteFooter');
+    if (!article) { root.innerHTML = '<p>Article non trouvé.</p>'; return; }
+
+    // charger fragment de contenu articles/content/<file>
+    let contentHtml = '';
+    if (article.file) {
+      try {
+        const frag = await fetch('articles/content/' + article.file);
+        if (frag.ok) contentHtml = await frag.text();
+        else {
+          const fallback = await fetch(article.file).catch(()=>({ok:false}));
+          if (fallback && fallback.ok) contentHtml = await fallback.text();
+        }
+      } catch(e) { /* ignore */ }
+    }
+
+    // construire label pour la rue (lecture depuis options.json si possible)
+    const normRues = Array.isArray(options.rues) ? options.rues : [];
+    let rueLabel = '';
+    if (article.rueId != null) {
+      if (typeof article.rueId === 'number' || /^\d+$/.test(String(article.rueId))) {
+        const idx = Number(article.rueId);
+        const entry = normRues[idx];
+        rueLabel = entry ? (entry.nom || entry.name || String(entry)) : String(article.rueId);
+      } else {
+        const found = normRues.find(r => String(r.id) === String(article.rueId));
+        rueLabel = found ? (found.nom || found.name || String(found)) : String(article.rueId);
+      }
+    }
+
+    const periode = (article.periode != null && Array.isArray(options.periodes)) ? (options.periodes[article.periode] || article.periode) : (article.periode||'');
+    const famille = article.famille || '';
+    const theme = article.theme || '';
+
+    const metaParts = [];
+    // UTILISER DIRECTEMENT article.rueId pour la redirection vers la carte
+    if (rueLabel) metaParts.push(`<a href="carte.html?rue=${encodeURIComponent(article.rueId)}">📍 ${esc(rueLabel)}</a>`);
+    if (periode) metaParts.push('🕰 ' + esc(periode));
+    if (famille) metaParts.push('👨‍👩‍👧 ' + esc(famille));
+    if (theme) metaParts.push('🏷 ' + esc(theme));
+
+    // injecter contenu
+    root.innerHTML = `
+      <article class="article-page">
+        <h2>${esc(article.title || 'Sans titre')}</h2>
+        ${article.image ? `<figure><img src="${esc(article.image)}" alt=""></figure>` : ''}
+        ${contentHtml || `<p>Contenu introuvable (attendu: articles/content/${esc(article.file)})</p>`}
+        <div class="article-meta">${metaParts.join(' • ')}</div>
+        <p><a href="articles.html">← Retour à la liste</a></p>
+      </article>
+    `;
+
+    // footer généré localement (sans modifier articles.json)
+    (function renderArticleFooter(a) {
+      if (!a) return;
+      const sourcesText = 'Archives communales de la ville, plan Popp (c.1855), témoignages locaux.';
+      const mapHref = `carte.html?rue=${encodeURIComponent(String(a.rueId ?? ''))}`;
+      const footerHtml = `
+        <div class="article-footer-generated" style="margin-top:12px;padding-top:8px;border-top:1px solid #eee;">
+          <p class="sources"><strong>Sources :</strong> ${esc(sourcesText)}</p>
+          <nav class="article-nav">
+            <a href="${mapHref}">📍 Voir le lieu sur la carte</a>
+            <a href="articles.html">← Retour à la liste des articles</a>
+          </nav>
+        </div>
+      `;
+      footerEl.insertAdjacentHTML('beforeend', footerHtml);
+    })(article);
+
+  } catch (err) {
+    document.getElementById('articleRoot').innerHTML = '<p>Erreur de chargement.</p>';
+    console.error(err);
+  }
+})();
+</script>
+</body>
+</html>
