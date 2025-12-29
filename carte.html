@@ -43,43 +43,62 @@
   <script>
   (async function () {
     try {
-      const [artsRes, lieuxRes] = await Promise.all([
+      const [optsRes, artsRes, lieuxRes] = await Promise.all([
+        fetch('options.json'),
         fetch('articles.json'),
         fetch('lieux.json')
       ]);
+      const options = await optsRes.json();
       const articles = await artsRes.json();
       const lieux = await lieuxRes.json();
 
       const map = L.map('map').setView([50.646374, 5.736361], 15);
-
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
         attribution: '© OpenStreetMap'
       }).addTo(map);
 
-      // indexer les articles par rueId (string)
-      const articlesByRue = {};
-      (articles || []).forEach(a => {
-        const key = a.rueId == null ? '__sans_rue' : String(a.rueId);
-        if (!articlesByRue[key]) articlesByRue[key] = [];
-        articlesByRue[key].push(a);
-      });
+      const esc = s => String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').trim();
+      const normalize = s => String(s || '').trim().toLowerCase();
 
-      // helper échappement
-      const esc = s => String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-
-      // Normaliser lieux (supporte tableau ou objet)
+      // normaliser lieux en tableau
       const lieuxList = Array.isArray(lieux) ? lieux : Object.values(lieux || {});
 
-      // créer les marqueurs
+      // construire mappage : nomRue (options.rues) -> idLieu (lieux.id) en faisant un matching sur le nom
+      const nameToLieuId = {};
+      (lieuxList || []).forEach(l => {
+        const key = normalize(l.nom || l.name || '');
+        if (key) nameToLieuId[key] = l.id;
+      });
+
+      // indexer articles par lieuId — pour chaque article, retrouver la rue dans options.rues via article.rueId
+      const articlesByLieu = {};
+      (articles || []).forEach(a => {
+        let targetKey = '__sans_rue';
+        if (a.rueId != null && Array.isArray(options.rues)) {
+          const rueName = options.rues[a.rueId];
+          if (rueName) {
+            const matchedId = nameToLieuId[normalize(rueName)];
+            if (matchedId !== undefined) targetKey = String(matchedId);
+          }
+        }
+        // si l'article contient un champ explicite vers lieu (par ex. lieuId), privilégier
+        if (a.lieuId != null) targetKey = String(a.lieuId);
+
+        if (!articlesByLieu[targetKey]) articlesByLieu[targetKey] = [];
+        articlesByLieu[targetKey].push(a);
+      });
+
+      // créer marqueurs pour chaque lieu
+      Object.keys(nameToLieuId).forEach(k => {});
       lieuxList.forEach(lieu => {
         const idKey = String(lieu.id);
-        const articlesLieu = articlesByRue[idKey] || [];
+        const artsForLieu = articlesByLieu[idKey] || [];
 
-        let popupHtml = `<strong>${esc(lieu.nom)}</strong><br><br>`;
-        if (articlesLieu.length) {
+        let popupHtml = `<strong>${esc(lieu.nom || lieu.name || '—')}</strong><br><br>`;
+        if (artsForLieu.length) {
           popupHtml += '<ul>';
-          articlesLieu.forEach(a => {
+          artsForLieu.forEach(a => {
             popupHtml += `<li><a href="${esc(a.file || '#')}">${esc(a.title || 'Sans titre')}</a></li>`;
           });
           popupHtml += '</ul>';
@@ -87,16 +106,36 @@
           popupHtml += `<em>Aucun article pour ce lieu</em>`;
         }
 
-        L.marker(lieu.coords)
-          .addTo(map)
-          .bindPopup(popupHtml);
+        L.marker(lieu.coords).addTo(map).bindPopup(popupHtml);
       });
 
-      // Zoom si ?rue=...
+      // gestion des articles sans lieu correspondant : regrouper et afficher éventuellement en popup "Sans lieu"
+      const sansLieuArts = articlesByLieu['__sans_rue'] || [];
+      if (sansLieuArts.length) {
+        const popupHtml = '<strong>Articles sans lieu associé</strong><br><ul>' +
+          sansLieuArts.map(a => `<li><a href="${esc(a.file || '#')}">${esc(a.title || 'Sans titre')}</a></li>`).join('') +
+          '</ul>';
+        // placer le marqueur au centre de la carte (ou ne pas placer du tout) — ici on affiche une popup au centre
+        L.popup({ maxWidth: 400 })
+          .setLatLng(map.getCenter())
+          .setContent(popupHtml)
+          .openOn(map);
+      }
+
+      // Zoom si ?rue=... (on accepte soit id de lieu soit index de options.rues)
       const params = new URLSearchParams(window.location.search);
       const rueParam = params.get('rue');
       if (rueParam) {
-        const target = lieuxList.find(l => String(l.id) === String(rueParam));
+        // si rueParam est un index d'options.rues, trouver le lieu correspondant
+        let target = lieuxList.find(l => String(l.id) === String(rueParam));
+        if (!target && Array.isArray(options.rues) && /^\d+$/.test(rueParam)) {
+          const idx = Number(rueParam);
+          const rueName = options.rues[idx];
+          if (rueName) {
+            const matchedId = nameToLieuId[normalize(rueName)];
+            target = lieuxList.find(l => String(l.id) === String(matchedId));
+          }
+        }
         if (target && target.coords) map.setView(target.coords, 18);
       }
     } catch (err) {

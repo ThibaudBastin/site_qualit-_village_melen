@@ -1,11 +1,20 @@
 (async function () {
   try {
-    const [optRes, artRes] = await Promise.all([
+    const [optRes, artRes, lieuxRes] = await Promise.all([
       fetch('options.json'),
-      fetch('articles.json')
+      fetch('articles.json'),
+      fetch('lieux.json')
     ]);
     const options = await optRes.json();
     const articles = await artRes.json();
+    const lieuxRaw = await lieuxRes.json();
+
+    // normaliser lieux en map par id
+    const lieuxList = Array.isArray(lieuxRaw) ? lieuxRaw : Object.values(lieuxRaw || {});
+    const lieuxMap = {};
+    lieuxList.forEach(l => {
+      if (l && l.id != null) lieuxMap[String(l.id)] = l;
+    });
 
     const selRue = document.getElementById('filterRue');
     const selPer = document.getElementById('filterPeriode');
@@ -15,6 +24,7 @@
 
     function fillSelect(id, arr, placeholder) {
       const sel = document.getElementById(id);
+      if (!sel) return;
       sel.innerHTML = '';
       const opt = document.createElement('option');
       opt.value = '';
@@ -51,7 +61,7 @@
       renderArticles(filtered, options);
     }
 
-    // render list of articles (articles use indices into options)
+    // render list of articles (articles use indices into options OR rueId -> lieux.id)
     function renderArticles(list, opts) {
       container.innerHTML = '';
       if (!list.length) {
@@ -66,38 +76,48 @@
         // media
         let mediaHtml = '';
         if (a.image) {
-          mediaHtml = `<img src="${a.image}" alt="${escapeHtml(a.title || '')}" class="article-image" style="max-width:100%;border-radius:6px;">`;
+          mediaHtml = `<img src="${escapeHtml(a.image)}" alt="${escapeHtml(a.title || '')}" class="article-image" style="max-width:100%;border-radius:6px;">`;
         } else if (a.video) {
           mediaHtml = `
             <video class="article-video" controls style="max-width:100%;border-radius:6px;">
-              <source src="${a.video}" type="video/mp4">
+              <source src="${escapeHtml(a.video)}" type="video/mp4">
               Votre navigateur ne supporte pas la vidéo.
             </video>
           `;
         }
 
-        const rueName = (a.rueId != null && opts.rues && opts.rues[a.rueId]) ? opts.rues[a.rueId] : '';
+        // récupérer nom du lieu : priorité à lieux.json (lieu.nom) via a.rueId,
+        // fallback sur options.rues (ancien format index)
+        let rueName = '';
+        let rueLinkParam = '';
+        if (a.rueId != null && lieuxMap[String(a.rueId)]) {
+          rueName = lieuxMap[String(a.rueId)].nom || lieuxMap[String(a.rueId)].name || '';
+          rueLinkParam = String(a.rueId); // lieu.id
+        } else if (a.rueId != null && Array.isArray(opts.rues) && opts.rues[a.rueId]) {
+          rueName = opts.rues[a.rueId];
+          // if article.rueId was an index into options.rues, keep link param as that index
+          rueLinkParam = String(a.rueId);
+        }
+
         const periodeName = (a.periode != null && opts.periodes && opts.periodes[a.periode]) ? opts.periodes[a.periode] : '';
         const familleName = (a.famille != null && opts.familles && opts.familles[a.famille]) ? opts.familles[a.famille] : '';
         const themeName = (a.theme != null && opts.themes && opts.themes[a.theme]) ? opts.themes[a.theme] : '';
 
-        const rueLink = (a.rueId != null && rueName)
-          ? `<a href="carte.html?rue=${a.rueId}">📍 ${escapeHtml(rueName)}</a>`
-          : '';
+        const rueHtml = rueName ? `<a href="carte.html?rue=${encodeURIComponent(rueLinkParam)}">📍 ${escapeHtml(rueName)}</a>` : '';
 
         const metaParts = [];
-        if (rueLink) metaParts.push(rueLink);
+        if (rueHtml) metaParts.push(rueHtml);
         if (periodeName) metaParts.push('🕰 ' + escapeHtml(periodeName));
         if (familleName) metaParts.push('👨‍👩‍👧 ' + escapeHtml(familleName));
         if (themeName) metaParts.push('🏷 ' + escapeHtml(themeName));
 
-        const metaHtml = metaParts.length ? `<p>${metaParts.join('<br>')}</p>` : '';
+        const metaHtml = metaParts.length ? `<p>${metaParts.join(' • ')}</p>` : '';
 
         div.innerHTML = `
           <h3>${escapeHtml(a.title || 'Sans titre')}</h3>
           ${mediaHtml}
           ${metaHtml}
-          ${a.file ? `<p><a href="${a.file}">Lire l’article</a></p>` : ''}
+          ${a.file ? `<p><a href="${escapeHtml(a.file)}">Lire l’article</a></p>` : ''}
         `;
 
         container.appendChild(div);
@@ -106,7 +126,7 @@
 
     // escape helper simple
     function escapeHtml(str) {
-      return String(str)
+      return String(str || '')
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
@@ -116,7 +136,7 @@
 
     // attach listeners
     [selRue, selPer, selFam, selThe].forEach(s => {
-      s.addEventListener('change', () => applyFilters(articles));
+      if (s) s.addEventListener('change', () => applyFilters(articles));
     });
 
     // initial render
