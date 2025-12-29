@@ -59,45 +59,85 @@
       }).addTo(map);
 
       const esc = s => String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').trim();
-      const normalize = s => String(s || '').trim().toLowerCase();
 
-      // normaliser lieux en tableau
+      // normalize options.rues into array of { id, nom } (supports old string-array and new object-array)
+      const rawRues = Array.isArray(options.rues) ? options.rues : [];
+      const rues = rawRues.map((r, i) => {
+        if (r && typeof r === 'object') return { id: String(r.id ?? i), nom: r.nom ?? r.name ?? '' };
+        return { id: String(i), nom: String(r || '') };
+      });
+
+      // build quick map of lieu.id -> lieu
       const lieuxList = Array.isArray(lieux) ? lieux : Object.values(lieux || {});
+      const lieuxMap = {};
+      lieuxList.forEach(l => { if (l && l.id != null) lieuxMap[String(l.id)] = l; });
 
-      // construire mappage : nomRue (options.rues) -> idLieu (lieux.id) en faisant un matching sur le nom
-      const nameToLieuId = {};
-      (lieuxList || []).forEach(l => {
-        const key = normalize(l.nom || l.name || '');
-        if (key) nameToLieuId[key] = l.id;
-      });
+      // helper coords normalization
+      const toLatLng = c => {
+        if (!c) return null;
+        if (Array.isArray(c) && c.length >= 2) return c;
+        if (c.lat != null && (c.lng != null || c.lon != null)) return [c.lat, c.lng ?? c.lon];
+        return null;
+      };
 
-      // indexer articles par lieuId — pour chaque article, retrouver la rue dans options.rues via article.rueId
+      // map options index -> lieu id (when options.rues elements correspond to lieux by id)
+      const optionIndexToId = {};
+      rues.forEach((r, idx) => { optionIndexToId[String(idx)] = r.id; });
+
+      // index articles by lieu id (articles.rueId may be numeric index into options.rues OR a lieu id string)
       const articlesByLieu = {};
-      (articles || []).forEach(a => {
-        let targetKey = '__sans_rue';
-        if (a.rueId != null && Array.isArray(options.rues)) {
-          const rueName = options.rues[a.rueId];
-          if (rueName) {
-            const matchedId = nameToLieuId[normalize(rueName)];
-            if (matchedId !== undefined) targetKey = String(matchedId);
-          }
-        }
-        // si l'article contient un champ explicite vers lieu (par ex. lieuId), privilégier
-        if (a.lieuId != null) targetKey = String(a.lieuId);
+      const pushArticle = (key, a) => {
+        if (!articlesByLieu[key]) articlesByLieu[key] = [];
+        articlesByLieu[key].push(a);
+      };
 
-        if (!articlesByLieu[targetKey]) articlesByLieu[targetKey] = [];
-        articlesByLieu[targetKey].push(a);
+      (articles || []).forEach(a => {
+        if (a == null) return;
+        // null/undefined => sans lieu
+        if (a.rueId == null) { pushArticle('__sans_lieu', a); return; }
+
+        const rid = a.rueId;
+        // number -> treat as index into options.rues
+        if (typeof rid === 'number' || (/^\d+$/.test(String(rid)))) {
+          const idxKey = String(rid);
+          const mappedLieuId = optionIndexToId[idxKey];
+          if (mappedLieuId && lieuxMap[mappedLieuId]) {
+            pushArticle(mappedLieuId, a);
+            return;
+          }
+          // if options.rues contains names that match lieux (fallback): find by nom equality
+          const possibleNom = rues[Number(idxKey)]?.nom;
+          if (possibleNom) {
+            const found = lieuxList.find(l => String((l.nom || l.name || '')).trim().toLowerCase() === String(possibleNom).trim().toLowerCase());
+            if (found) { pushArticle(String(found.id), a); return; }
+          }
+          // fallback: push to sans_lieu
+          pushArticle('__sans_lieu', a);
+          return;
+        }
+
+        // string -> could be a lieu id directly or an option id
+        const ridStr = String(rid);
+        if (lieuxMap[ridStr]) { pushArticle(ridStr, a); return; }
+        // maybe it's an option entry id (options.rues entries may have id equal to lieu.id)
+        const optionMatch = rues.find(r => r.id === ridStr);
+        if (optionMatch && lieuxMap[optionMatch.id]) { pushArticle(optionMatch.id, a); return; }
+
+        // final fallback: try matching by name against lieux.nom
+        const matchByName = lieuxList.find(l => String(l.nom || l.name || '').trim().toLowerCase() === ridStr.trim().toLowerCase());
+        if (matchByName) { pushArticle(String(matchByName.id), a); return; }
+
+        pushArticle('__sans_lieu', a);
       });
 
-      // créer marqueurs pour chaque lieu
-      Object.keys(nameToLieuId).forEach(k => {});
+      // create markers for each lieu
       lieuxList.forEach(lieu => {
         const idKey = String(lieu.id);
         const artsForLieu = articlesByLieu[idKey] || [];
 
-        let popupHtml = `<strong>${esc(lieu.nom || lieu.name || '—')}</strong><br><br>`;
+        let popupHtml = `<strong>${esc(lieu.nom || lieu.name || '—')}</strong><br>`;
         if (artsForLieu.length) {
-          popupHtml += '<ul>';
+          popupHtml += '<ul style="margin:0;padding-left:1rem">';
           artsForLieu.forEach(a => {
             popupHtml += `<li><a href="${esc(a.file || '#')}">${esc(a.title || 'Sans titre')}</a></li>`;
           });
@@ -106,37 +146,33 @@
           popupHtml += `<em>Aucun article pour ce lieu</em>`;
         }
 
-        L.marker(lieu.coords).addTo(map).bindPopup(popupHtml);
+        const latlng = toLatLng(lieu.coords || lieu.coord || lieu.location);
+        if (latlng) L.marker(latlng).addTo(map).bindPopup(popupHtml);
       });
 
-      // gestion des articles sans lieu correspondant : regrouper et afficher éventuellement en popup "Sans lieu"
-      const sansLieuArts = articlesByLieu['__sans_rue'] || [];
-      if (sansLieuArts.length) {
-        const popupHtml = '<strong>Articles sans lieu associé</strong><br><ul>' +
-          sansLieuArts.map(a => `<li><a href="${esc(a.file || '#')}">${esc(a.title || 'Sans titre')}</a></li>`).join('') +
+      // show popup for articles without matching lieu
+      const sans = articlesByLieu['__sans_lieu'] || [];
+      if (sans.length) {
+        const popupHtml = '<strong>Articles sans lieu associé</strong><br><ul style="margin:0;padding-left:1rem">' +
+          sans.map(a => `<li><a href="${esc(a.file||'#')}">${esc(a.title||'Sans titre')}</a></li>`).join('') +
           '</ul>';
-        // placer le marqueur au centre de la carte (ou ne pas placer du tout) — ici on affiche une popup au centre
-        L.popup({ maxWidth: 400 })
-          .setLatLng(map.getCenter())
-          .setContent(popupHtml)
-          .openOn(map);
+        L.popup({ maxWidth: 400 }).setLatLng(map.getCenter()).setContent(popupHtml).openOn(map);
       }
 
-      // Zoom si ?rue=... (on accepte soit id de lieu soit index de options.rues)
+      // support ?rue=<lieuId> or ?rue=<optionsIndex>
       const params = new URLSearchParams(window.location.search);
       const rueParam = params.get('rue');
       if (rueParam) {
-        // si rueParam est un index d'options.rues, trouver le lieu correspondant
-        let target = lieuxList.find(l => String(l.id) === String(rueParam));
-        if (!target && Array.isArray(options.rues) && /^\d+$/.test(rueParam)) {
-          const idx = Number(rueParam);
-          const rueName = options.rues[idx];
-          if (rueName) {
-            const matchedId = nameToLieuId[normalize(rueName)];
-            target = lieuxList.find(l => String(l.id) === String(matchedId));
-          }
+        let target = lieuxMap[String(rueParam)];
+        if (!target && /^\d+$/.test(rueParam)) {
+          // numeric => options index
+          const mapped = optionIndexToId[String(rueParam)];
+          if (mapped) target = lieuxMap[mapped];
         }
-        if (target && target.coords) map.setView(target.coords, 18);
+        if (target) {
+          const latlng = toLatLng(target.coords || target.coord || target.location);
+          if (latlng) map.setView(latlng, 18);
+        }
       }
     } catch (err) {
       console.error('Erreur chargement carte:', err);
