@@ -1,89 +1,129 @@
-fetch('articles.json')
-  .then(res => res.json())
-  .then(articles => {
-    populateFilters(articles);
-    renderArticles(articles);
+(async function () {
+  try {
+    const [optRes, artRes] = await Promise.all([
+      fetch('options.json'),
+      fetch('articles.json')
+    ]);
+    const options = await optRes.json();
+    const articles = await artRes.json();
 
-    document.querySelectorAll('.filters select')
-      .forEach(select => {
-        select.addEventListener('change', () => {
-          applyFilters(articles);
-        });
+    const selRue = document.getElementById('filterRue');
+    const selPer = document.getElementById('filterPeriode');
+    const selFam = document.getElementById('filterFamille');
+    const selThe = document.getElementById('filterTheme');
+    const container = document.getElementById('articlesList');
+
+    function fillSelect(id, arr, placeholder) {
+      const sel = document.getElementById(id);
+      sel.innerHTML = '';
+      const opt = document.createElement('option');
+      opt.value = '';
+      opt.textContent = placeholder;
+      sel.appendChild(opt);
+      (arr || []).forEach((label, i) => {
+        const o = document.createElement('option');
+        o.value = String(i);
+        o.textContent = label;
+        sel.appendChild(o);
       });
-  })
-  .catch(err => console.error('Erreur fetch JSON:', err));
-
-function populateFilters(articles) {
-  fillSelect('filterRue', articles.map(a => a.rueNom));
-  fillSelect('filterPeriode', articles.map(a => a.periode));
-  fillSelect('filterFamille', articles.map(a => a.famille));
-  fillSelect('filterTheme', articles.map(a => a.theme));
-}
-
-function fillSelect(id, values) {
-  const select = document.getElementById(id);
-  [...new Set(values.filter(v => v))].sort().forEach(v => {
-    const option = document.createElement('option');
-    option.value = v;
-    option.textContent = v;
-    select.appendChild(option);
-  });
-}
-
-function applyFilters(articles) {
-  const filters = {
-    rue: document.getElementById('filterRue').value,
-    periode: document.getElementById('filterPeriode').value,
-    famille: document.getElementById('filterFamille').value,
-    theme: document.getElementById('filterTheme').value
-  };
-
-  const filtered = articles.filter(a =>
-    (!filters.rue || a.rueNom === filters.rue) &&
-    (!filters.periode || a.periode === filters.periode) &&
-    (!filters.famille || a.famille === filters.famille) &&
-    (!filters.theme || a.theme === filters.theme)
-  );
-
-  renderArticles(filtered);
-}
-
-
-function renderArticles(list) {
-  const container = document.getElementById('articlesList');
-  container.innerHTML = '';
-
-  list.forEach(a => {
-    const div = document.createElement('div');
-    div.className = 'article-item';
-    
-    let mediaHtml = '';
-    if (a.image) {
-        mediaHtml = `<img src="${a.image}" alt="${a.title}" class="article-image">`;
-    } else if (a.video) {
-        mediaHtml = `
-        <video class="article-video" controls>
-            <source src="${a.video}" type="video/mp4">
-            Votre navigateur ne supporte pas la vidéo.
-        </video>
-        `;
     }
 
-    const rueLink =
-        a.rueId && a.rueNom
-        ? `<a href="carte.html?rue=${a.rueId}">📍 ${a.rueNom}</a>`
-        : '';
-    div.innerHTML = `
-    <h3>${a.title}</h3>
-    ${mediaHtml}
-    <p>
-        ${a.rueId ? rueLink + '<br>' : ''}
-        ${a.periode ? '🕰 ' + a.periode + '<br>' : ''}
-        ${a.famille ? '👨‍👩‍👧 ' + a.famille + '<br>' : ''}
-        ${a.theme ? '🏷 ' + a.theme : ''}
-    </p>
-    <a href="${a.file}">Lire l’article</a>
-    `;
-    container.appendChild(div);
-  });
-}
+    fillSelect('filterRue', options.rues, 'Toutes');
+    fillSelect('filterPeriode', options.periodes, 'Toutes');
+    fillSelect('filterFamille', options.familles, 'Tous');
+    fillSelect('filterTheme', options.themes, 'Tous');
+
+    // apply filters and render
+    function applyFilters(allArticles) {
+      const fRue = selRue.value;
+      const fPer = selPer.value;
+      const fFam = selFam.value;
+      const fThe = selThe.value;
+
+      const filtered = allArticles.filter(a => {
+        if (fRue !== '' && String(a.rueId) !== fRue) return false;
+        if (fPer !== '' && String(a.periode) !== fPer) return false;
+        if (fFam !== '' && String(a.famille) !== fFam) return false;
+        if (fThe !== '' && String(a.theme) !== fThe) return false;
+        return true;
+      });
+
+      renderArticles(filtered, options);
+    }
+
+    // render list of articles (articles use indices into options)
+    function renderArticles(list, opts) {
+      container.innerHTML = '';
+      if (!list.length) {
+        container.textContent = 'Aucun article trouvé.';
+        return;
+      }
+
+      list.forEach(a => {
+        const div = document.createElement('div');
+        div.className = 'article-item';
+
+        // media
+        let mediaHtml = '';
+        if (a.image) {
+          mediaHtml = `<img src="${a.image}" alt="${escapeHtml(a.title || '')}" class="article-image" style="max-width:100%;border-radius:6px;">`;
+        } else if (a.video) {
+          mediaHtml = `
+            <video class="article-video" controls style="max-width:100%;border-radius:6px;">
+              <source src="${a.video}" type="video/mp4">
+              Votre navigateur ne supporte pas la vidéo.
+            </video>
+          `;
+        }
+
+        const rueName = (a.rueId != null && opts.rues && opts.rues[a.rueId]) ? opts.rues[a.rueId] : '';
+        const periodeName = (a.periode != null && opts.periodes && opts.periodes[a.periode]) ? opts.periodes[a.periode] : '';
+        const familleName = (a.famille != null && opts.familles && opts.familles[a.famille]) ? opts.familles[a.famille] : '';
+        const themeName = (a.theme != null && opts.themes && opts.themes[a.theme]) ? opts.themes[a.theme] : '';
+
+        const rueLink = (a.rueId != null && rueName)
+          ? `<a href="carte.html?rue=${a.rueId}">📍 ${escapeHtml(rueName)}</a>`
+          : '';
+
+        const metaParts = [];
+        if (rueLink) metaParts.push(rueLink);
+        if (periodeName) metaParts.push('🕰 ' + escapeHtml(periodeName));
+        if (familleName) metaParts.push('👨‍👩‍👧 ' + escapeHtml(familleName));
+        if (themeName) metaParts.push('🏷 ' + escapeHtml(themeName));
+
+        const metaHtml = metaParts.length ? `<p>${metaParts.join('<br>')}</p>` : '';
+
+        div.innerHTML = `
+          <h3>${escapeHtml(a.title || 'Sans titre')}</h3>
+          ${mediaHtml}
+          ${metaHtml}
+          ${a.file ? `<p><a href="${a.file}">Lire l’article</a></p>` : ''}
+        `;
+
+        container.appendChild(div);
+      });
+    }
+
+    // escape helper simple
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    // attach listeners
+    [selRue, selPer, selFam, selThe].forEach(s => {
+      s.addEventListener('change', () => applyFilters(articles));
+    });
+
+    // initial render
+    applyFilters(articles);
+  } catch (err) {
+    console.error('Erreur fetch/options:', err);
+    const container = document.getElementById('articlesList');
+    if (container) container.textContent = 'Erreur lors du chargement des articles.';
+  }
+})();

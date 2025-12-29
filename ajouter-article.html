@@ -127,184 +127,168 @@ iframe { width: 100%; height: 500px; border: 1px solid #ccc; margin-top: 1rem; }
 let options = { rues: [], periodes: [], familles: [], themes: [] };
 let articles = [];
 
-// Charger options.json et articles.json
-Promise.all([
-  fetch('options.json').then(r => r.json()),
-  fetch('articles.json').then(r => r.json())
-]).then(([optData, artData]) => {
-  options = optData;
-  articles = artData;
-  populateSelects();
-  populateArticleSelect();
-});
-
-// Remplir les listes déroulantes
-function populateSelects() {
-  fillSelect('rueId', options.rues);
-  fillSelect('periode', options.periodes);
-  fillSelect('famille', options.familles);
-  fillSelect('theme', options.themes);
-}
-
-function fillSelect(id, arr) {
-  const sel = document.getElementById(id);
-  sel.innerHTML = '<option value="">-- choisir --</option>';
-  arr.forEach((item, i) => {
-    const opt = document.createElement('option');
-    opt.value = i;
-    opt.textContent = item;
-    sel.appendChild(opt);
-  });
-}
-
-// Ajouter nouvelle option
-function addOption(type) {
-  const inputId = type==='rue'?'newRue':type==='periode'?'newPeriode':type==='famille'?'newFamille':'newTheme';
-  const val = document.getElementById(inputId).value.trim();
-  if(!val) return;
-  options[type + (type==='rue'?'s':type==='theme'?'s':'')].push(val);
-  populateSelects();
-  document.getElementById(inputId).value='';
-}
-
-// Prévisualisation média
-function previewMedia() {
-  const p = document.getElementById("mediaPreview");
-  p.innerHTML = "";
-  const imgVal = document.getElementById("image").value;
-  const vidVal = document.getElementById("video").value;
-  if (vidVal) p.innerHTML = `<video controls src="${vidVal}"></video>`;
-  else if (imgVal) p.innerHTML = `<img src="${imgVal}">`;
-}
-
-// Préparer menu des articles
-function populateArticleSelect() {
-  const sel = document.getElementById("articleSelect");
-  articles.forEach((art,i)=>{
-    const opt = document.createElement('option');
-    opt.value = i;
-    opt.textContent = art.title;
-    sel.appendChild(opt);
-  });
-}
-
-// Quand on choisit un article
-document.getElementById("articleSelect").addEventListener('change', async function(){
-  const idx = this.value;
-  if(idx==='') return;
-
-  const art = articles[idx];
-
-  // Remplir les champs simples
-  document.getElementById("title").value = art.title;
-  document.getElementById("file").value = art.file;
-  document.getElementById("rueNom").value = art.rueNom||'';
-  document.getElementById("rueId").value = art.rueId ? options.rues.indexOf(art.rueId) : '';
-  document.getElementById("periode").value = art.periode ? options.periodes.indexOf(art.periode) : '';
-  document.getElementById("famille").value = art.famille ? options.familles.indexOf(art.famille) : '';
-  document.getElementById("theme").value = art.theme ? options.themes.indexOf(art.theme) : '';
-  document.getElementById("image").value = art.image||'';
-  document.getElementById("video").value = art.video||'';
-
-  previewMedia();
-
-  // --- Nouvelle récupération du texte HTML ---
-  if(art.file){
-    try {
-      const response = await fetch(art.file);
-      const htmlText = await response.text();
-      
-      // Parser le HTML
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(htmlText, "text/html");
-
-      // Extraire uniquement le contenu de <section>
-      const section = doc.querySelector("main section");
-      if(section){
-        // Transformer les <p> en texte avec double saut de ligne
-        const paragraphs = Array.from(section.querySelectorAll("p"))
-                                .map(p => p.textContent.trim())
-                                .join("\n\n");
-        document.getElementById("content").value = paragraphs;
-      } else {
-        // Si pas de <section>, récupérer tout le texte
-        document.getElementById("content").value = doc.body.textContent.trim();
-      }
-
-    } catch(e){
-      console.error("Erreur chargement HTML :", e);
-      document.getElementById("content").value = '';
-    }
+// Charger options.json et articles.json au démarrage
+(async function loadData() {
+  try {
+    const [optRes, artRes] = await Promise.all([
+      fetch('options.json'),
+      fetch('articles.json')
+    ]);
+    options = await optRes.json();
+    articles = await artRes.json();
+    populateSelects();
+    populateArticleSelect();
+  } catch (err) {
+    console.error('Erreur chargement options/articles :', err);
   }
-});
+})();
 
-function updateArticleInJSON(idx) {
-  const art = articles[idx];
-  art.title = document.getElementById("title").value;
-  art.file = document.getElementById("file").value;
-  art.rueId = options.rues[document.getElementById("rueId").value] || null;
-  art.rueNom = document.getElementById("rueNom").value || null;
-  art.periode = options.periodes[document.getElementById("periode").value] || null;
-  art.famille = options.familles[document.getElementById("famille").value] || null;
-  art.theme = options.themes[document.getElementById("theme").value] || null;
-  art.image = document.getElementById("image").value || null;
-  art.video = document.getElementById("video").value || null;
+// Remplir les listes déroulantes (rues, périodes, familles, thèmes)
+function populateSelects() {
+  fillSelect('selectRue', options.rues, '— Choisir une rue —');
+  fillSelect('selectPeriode', options.periodes, '— Choisir une période —');
+  fillSelect('selectFamille', options.familles, '— Choisir une famille —');
+  fillSelect('selectTheme', options.themes, '— Choisir un thème —');
 }
 
+function fillSelect(id, arr, placeholder) {
+  const sel = document.getElementById(id);
+  if (!sel) return;
+  sel.innerHTML = '';
+  const opt = document.createElement('option');
+  opt.value = '';
+  opt.textContent = placeholder;
+  sel.appendChild(opt);
+  (arr || []).forEach((label, i) => {
+    const o = document.createElement('option');
+    o.value = String(i);
+    o.textContent = label;
+    sel.appendChild(o);
+  });
+}
 
+// Préparer le menu des articles (sélecteur) pour modification
+function populateArticleSelect() {
+  let sel = document.getElementById('articleSelect');
+  // si pas présent, on le crée juste sous le label "Choisir un article à modifier"
+  if (!sel) {
+    const container = document.querySelector('main section') || document.body;
+    const grp = document.createElement('div');
+    grp.className = 'form-group';
+    const label = document.createElement('label');
+    label.textContent = 'Choisir un article à modifier';
+    sel = document.createElement('select');
+    sel.id = 'articleSelect';
+    grp.appendChild(label);
+    grp.appendChild(sel);
+    // insérer en haut du formulaire
+    const firstFormGroup = container.querySelector('.form-group');
+    if (firstFormGroup) container.insertBefore(grp, firstFormGroup);
+    else container.appendChild(grp);
+  }
 
-// Génération HTML + JSON
-function generate() {
-  const t = document.getElementById("title").value;
-  const f = document.getElementById("file").value;
-  const rId = document.getElementById("rueId").value;
-  const rNom = document.getElementById("rueNom").value;
-  const peri = document.getElementById("periode").value;
-  const fam = document.getElementById("famille").value;
-  const th = document.getElementById("theme").value;
-  const img = document.getElementById("image").value;
-  const vid = document.getElementById("video").value;
-  const cont = document.getElementById("content").value;
+  sel.innerHTML = '';
+  const empty = document.createElement('option');
+  empty.value = '';
+  empty.textContent = '— Nouveau / sélectionner —';
+  sel.appendChild(empty);
 
-  const paragraphs = cont.split(/\n\s*\n/).map(p=>`<p>${p.trim()}</p>`).join("\n");
+  (articles || []).forEach((a, i) => {
+    const o = document.createElement('option');
+    // on utilise l'index comme valeur pour retrouver facilement l'article
+    o.value = String(i);
+    o.textContent = a.title || a.file || `Article ${i}`;
+    sel.appendChild(o);
+  });
 
-  let media = "";
-  if(vid) media = `<video controls><source src="${vid}" type="video/mp4"></video>`;
-  else if(img) media = `<figure><img src="${img}" alt="${t}"></figure>`;
+  sel.addEventListener('change', async function () {
+    if (!this.value) {
+      clearForm();
+      return;
+    }
+    const idx = Number(this.value);
+    await loadArticleByIndex(idx);
+  });
+}
 
-  const mapBtn = rId ? `<div class="article-map-link"><a href="carte.html?rue=${options.rues[rId]}" class="map-button">📍 Voir ce lieu sur la carte</a></div>` : "";
+// récupère (ou utilise en mémoire) articles.json puis charge l'article choisi
+async function loadArticleByIndex(idx) {
+  try {
+    if (!Array.isArray(articles) || articles.length === 0) {
+      const res = await fetch('articles.json');
+      articles = await res.json();
+      populateArticleSelect(); // re-populate si nécessaire
+    }
+    const article = articles[idx];
+    if (!article) return;
+    fillFormFromArticle(article);
+  } catch (err) {
+    console.error('Erreur récupération article:', err);
+  }
+}
 
-  const html = `<!DOCTYPE html>
-<html lang="fr">
-<head><meta charset="UTF-8"><title>${t}</title><link rel="stylesheet" href="style.css"></head>
-<body>
-<header><h1>Qualité village Melen</h1>
-<nav><a href="index.html">Actualités</a><a href="articles.html">Articles</a><a href="carte.html">Carte</a><a href="agenda.html">Agenda</a></nav></header>
-<main><section><h2>${t}</h2>${media}${paragraphs}${mapBtn}
-<p><a href="articles.html">← Retour aux articles</a></p></section></main>
-<footer><p>© 2025 – Qualité village Melen</p></footer>
-</body></html>`;
-
-  const json = {
-    title: t,
-    file: f,
-    rueId: rId ? options.rues[rId] : null,
-    rueNom: rNom||null,
-    periode: peri ? options.periodes[peri] : null,
-    famille: fam ? options.familles[fam] : null,
-    theme: th ? options.themes[th] : null,
-    image: img||null,
-    video: vid||null
+// Remplit le formulaire avec les données de l'article si les champs existent
+function fillFormFromArticle(a) {
+  // champs attendus (ajustez les ids si nécessaires)
+  const map = {
+    'title': a.title,
+    'file': a.file,
+    'image': a.image,
+    'video': a.video,
+    'selectRue': a.rueId != null ? String(a.rueId) : '',
+    'selectPeriode': a.periode != null ? String(a.periode) : '',
+    'selectFamille': a.famille != null ? String(a.famille) : '',
+    'selectTheme': a.theme != null ? String(a.theme) : '',
+    'content': a.content || '' // si vous stockez corps d'article
   };
 
-  document.getElementById("htmlPreview").srcdoc = html;
-  document.getElementById("jsonOutput").value = JSON.stringify(json,null,2);
-  document.getElementById("htmlOutput").value = html;
+  Object.keys(map).forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (el.tagName === 'SELECT' || el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+      el.value = map[id] ?? '';
+      // déclencher event change pour éventuels handlers
+      el.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+  });
 
-  document.getElementById("downloads").innerHTML = `
-<a download="${f}" href="data:text/html;charset=utf-8,${encodeURIComponent(html)}">⬇ Télécharger HTML</a>
-<a download="${f.replace('.html','.json')}" href="data:application/json;charset=utf-8,${encodeURIComponent(JSON.stringify(json,null,2))}">⬇ Télécharger JSON</a>
-`;
+  // Média preview si présent
+  const preview = document.getElementById('mediaPreview');
+  if (preview) {
+    preview.innerHTML = '';
+    if (a.video) {
+      const v = document.createElement('video');
+      v.controls = true;
+      v.src = a.video;
+      v.style.maxWidth = '100%';
+      preview.appendChild(v);
+    } else if (a.image) {
+      const img = document.createElement('img');
+      img.src = a.image;
+      img.style.maxWidth = '100%';
+      preview.appendChild(img);
+    }
+  }
+
+  // remplir les zones JSON / HTML si la page gére cela
+  const jsonOut = document.getElementById('jsonOutput');
+  if (jsonOut) jsonOut.value = JSON.stringify(a, null, 2);
+}
+
+// vide le formulaire minimalement
+function clearForm() {
+  ['title','file','image','video','content'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  ['selectRue','selectPeriode','selectFamille','selectTheme'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  const preview = document.getElementById('mediaPreview');
+  if (preview) preview.innerHTML = '';
+  const jsonOut = document.getElementById('jsonOutput');
+  if (jsonOut) jsonOut.value = '';
 }
 </script>
 </body>
