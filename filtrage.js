@@ -172,7 +172,13 @@
           <h3>${escapeHtml(a.title || 'Sans titre')}</h3>
           ${mediaHtml}
           ${metaHtml}
-          ${a.file ? `<p><a href="${escapeHtml(a.file)}">Lire l’article</a></p>` : ''}
+          ${a.file ? `
+            <p>
+                <a href="article.html?file=${encodeURIComponent(a.file)}">
+                Lire l’article
+                </a>
+            </p>
+            ` : ''}
         `;
         container.appendChild(div);
       });
