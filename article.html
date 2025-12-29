@@ -101,8 +101,6 @@
     // injecter contenu
     root.innerHTML = `
       <article class="article-page">
-        <h2>${esc(article.title || 'Sans titre')}</h2>
-        ${article.image ? `<figure><img src="${esc(article.image)}" alt=""></figure>` : ''}
         ${contentHtml || `<p>Contenu introuvable (attendu: articles/content/${esc(article.file)})</p>`}
         <div class="article-meta">${metaParts.join(' • ')}</div>
         <p><a href="articles.html">← Retour à la liste</a></p>
