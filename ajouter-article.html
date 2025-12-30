@@ -2,47 +2,41 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
+<title>Ajouter / Modifier un article – Melen</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Modifier un article – Qualité village Melen</title>
 <link rel="stylesheet" href="style.css">
 
 <script>
+/* ===== LOGIN SIMPLE ===== */
 const PASSWORD = "melen1943";
-const userInput = prompt("Mot de passe requis :");
-if (userInput !== PASSWORD) {
-  document.write("<h2 style='text-align:center;margin-top:3rem;'>Accès refusé</h2>");
+if (prompt("Mot de passe requis") !== PASSWORD) {
+  document.body.innerHTML = "<h2 style='text-align:center;margin-top:3rem;'>Accès refusé</h2>";
   throw new Error("Accès refusé");
 }
 </script>
 
 <style>
-body { font-family: sans-serif; margin: 2rem; }
-.form-group { margin-bottom: 1rem; }
-label { font-weight: bold; display: block; margin-bottom: .3rem; }
-input, textarea, select { width: 100%; padding: .5rem; }
-button { padding: .6rem 1rem; margin-top: 1rem; cursor: pointer; }
-.preview img, video { max-width: 100%; margin-top: 1rem; border-radius: 6px; }
-iframe { width: 100%; height: 500px; border: 1px solid #ccc; margin-top: 1rem; }
-.downloads a { display: inline-block; margin-right: 1rem; margin-top: .5rem; }
+body { font-family: sans-serif; margin: 2rem; max-width: 900px }
+.form-group { margin-bottom: 1rem }
+label { font-weight: bold; display:block; margin-bottom:.3rem }
+input, select, textarea { width:100%; padding:.5rem }
+button { margin-top:.5rem; padding:.6rem 1rem; cursor:pointer }
+.preview img, video { max-width:100%; margin-top:1rem; border-radius:6px }
+textarea { font-family: monospace }
 </style>
 </head>
+
 <body>
 
-<header>
-<h1>Modifier un article</h1>
-</header>
-
-<main>
-<section>
+<h1>Ajouter / Modifier un article</h1>
 
 <div class="form-group">
-  <label>Choisir un article à modifier</label>
+  <label>Article existant</label>
   <select id="articleSelect">
-    <option value="">-- Sélectionner un article --</option>
+    <option value="">— Nouvel article —</option>
   </select>
 </div>
 
-<!-- FORMULAIRE -->
 <div class="form-group">
   <label>Titre</label>
   <input id="title">
@@ -54,242 +48,177 @@ iframe { width: 100%; height: 500px; border: 1px solid #ccc; margin-top: 1rem; }
 </div>
 
 <div class="form-group">
-  <label>Rue (ID)</label>
+  <label>Rue</label>
   <select id="rueId"></select>
-  <input id="newRue" placeholder="Nouvelle rue ID" style="margin-top:.5rem;">
-  <button onclick="addOption('rue')">Ajouter nouvelle rue</button>
-</div>
-
-<div class="form-group">
-  <label>Nom complet du lieu</label>
-  <input id="rueNom">
 </div>
 
 <div class="form-group">
   <label>Période</label>
   <select id="periode"></select>
-  <input id="newPeriode" placeholder="Nouvelle période" style="margin-top:.5rem;">
-  <button onclick="addOption('periode')">Ajouter nouvelle période</button>
 </div>
 
 <div class="form-group">
   <label>Famille</label>
-  <select id="famille"></select>
-  <input id="newFamille" placeholder="Nouvelle famille" style="margin-top:.5rem;">
-  <button onclick="addOption('famille')">Ajouter nouvelle famille</button>
+  <select id="famille">
+    <option value="">— Aucune —</option>
+  </select>
 </div>
 
 <div class="form-group">
   <label>Thème</label>
   <select id="theme"></select>
-  <input id="newTheme" placeholder="Nouveau thème" style="margin-top:.5rem;">
-  <button onclick="addOption('theme')">Ajouter nouveau thème</button>
 </div>
 
 <div class="form-group">
-  <label>Image (chemin)</label>
-  <input id="image" placeholder="images/photo.jpg" oninput="previewMedia()">
+  <label>Image (optionnel)</label>
+  <input id="image" placeholder="images/photo.jpg">
 </div>
 
 <div class="form-group">
-  <label>Vidéo (chemin mp4 – optionnel)</label>
-  <input id="video" placeholder="videos/video.mp4" oninput="previewMedia()">
+  <label>Vidéo mp4 (optionnel)</label>
+  <input id="video" placeholder="videos/video.mp4">
 </div>
 
 <div class="form-group">
-  <label>Texte de l’article</label>
+  <label>Texte HTML de l’article</label>
   <textarea id="content" rows="10"></textarea>
 </div>
 
-<button onclick="generate()">Générer / Mettre à jour</button>
-
-<div class="preview" id="mediaPreview"></div>
+<button onclick="generate()">Générer fichiers</button>
 
 <hr>
 
-<h3>Prévisualisation HTML</h3>
-<iframe id="htmlPreview"></iframe>
-
-<hr>
-
-<h3>Fichier JSON</h3>
+<h3>JSON article</h3>
 <textarea id="jsonOutput" rows="10"></textarea>
 
-<h3>Fichier HTML</h3>
+<h3>HTML article</h3>
 <textarea id="htmlOutput" rows="15"></textarea>
 
-<div class="downloads" id="downloads"></div>
-
-</section>
-</main>
+<div id="downloads"></div>
 
 <script>
-let options = { rues: [], periodes: [], familles: [], themes: [] };
-let articles = [];
+let options, articles;
+let currentIndex = null;
 
-// Charger options.json et articles.json au démarrage
-(async function loadData() {
-  try {
-    const [optRes, artRes] = await Promise.all([
-      fetch('options.json'),
-      fetch('articles.json')
-    ]);
-    options = await optRes.json();
-    articles = await artRes.json();
-    populateSelects();
-    populateArticleSelect();
-  } catch (err) {
-    console.error('Erreur chargement options/articles :', err);
-  }
+/* ===== CHARGEMENT DES DONNÉES ===== */
+(async function init() {
+  [options, articles] = await Promise.all([
+    fetch('options.json').then(r=>r.json()),
+    fetch('articles.json').then(r=>r.json())
+  ]);
+
+  fillSelect('rueId', options.rues.map(r=>r.nom));
+  fillSelect('periode', options.periodes);
+  fillSelect('famille', options.familles, true);
+  fillSelect('theme', options.themes);
+
+  populateArticleSelect();
 })();
 
-// Remplir les listes déroulantes (rues, périodes, familles, thèmes)
-function populateSelects() {
-  fillSelect('selectRue', options.rues, '— Choisir une rue —');
-  fillSelect('selectPeriode', options.periodes, '— Choisir une période —');
-  fillSelect('selectFamille', options.familles, '— Choisir une famille —');
-  fillSelect('selectTheme', options.themes, '— Choisir un thème —');
-}
-
-function fillSelect(id, arr, placeholder) {
+/* ===== UTILITAIRES ===== */
+function fillSelect(id, arr, allowEmpty=false) {
   const sel = document.getElementById(id);
-  if (!sel) return;
   sel.innerHTML = '';
-  const opt = document.createElement('option');
-  opt.value = '';
-  opt.textContent = placeholder;
-  sel.appendChild(opt);
-  (arr || []).forEach((label, i) => {
+  if (allowEmpty) {
     const o = document.createElement('option');
-    o.value = String(i);
-    o.textContent = label;
+    o.value = '';
+    o.textContent = '— Aucune —';
+    sel.appendChild(o);
+  }
+  arr.forEach((txt, i) => {
+    const o = document.createElement('option');
+    o.value = i;
+    o.textContent = txt;
     sel.appendChild(o);
   });
 }
 
-// Préparer le menu des articles (sélecteur) pour modification
 function populateArticleSelect() {
-  let sel = document.getElementById('articleSelect');
-  // si pas présent, on le crée juste sous le label "Choisir un article à modifier"
-  if (!sel) {
-    const container = document.querySelector('main section') || document.body;
-    const grp = document.createElement('div');
-    grp.className = 'form-group';
-    const label = document.createElement('label');
-    label.textContent = 'Choisir un article à modifier';
-    sel = document.createElement('select');
-    sel.id = 'articleSelect';
-    grp.appendChild(label);
-    grp.appendChild(sel);
-    // insérer en haut du formulaire
-    const firstFormGroup = container.querySelector('.form-group');
-    if (firstFormGroup) container.insertBefore(grp, firstFormGroup);
-    else container.appendChild(grp);
-  }
-
-  sel.innerHTML = '';
-  const empty = document.createElement('option');
-  empty.value = '';
-  empty.textContent = '— Nouveau / sélectionner —';
-  sel.appendChild(empty);
-
-  (articles || []).forEach((a, i) => {
+  const sel = document.getElementById('articleSelect');
+  articles.forEach((a,i) => {
     const o = document.createElement('option');
-    // on utilise l'index comme valeur pour retrouver facilement l'article
-    o.value = String(i);
-    o.textContent = a.title || a.file || `Article ${i}`;
+    o.value = i;
+    o.textContent = a.title;
     sel.appendChild(o);
   });
-
-  sel.addEventListener('change', async function () {
-    if (!this.value) {
-      clearForm();
-      return;
-    }
-    const idx = Number(this.value);
-    await loadArticleByIndex(idx);
-  });
+  sel.onchange = () => loadArticle(sel.value);
 }
 
-// récupère (ou utilise en mémoire) articles.json puis charge l'article choisi
-async function loadArticleByIndex(idx) {
-  try {
-    if (!Array.isArray(articles) || articles.length === 0) {
-      const res = await fetch('articles.json');
-      articles = await res.json();
-      populateArticleSelect(); // re-populate si nécessaire
-    }
-    const article = articles[idx];
-    if (!article) return;
-    fillFormFromArticle(article);
-  } catch (err) {
-    console.error('Erreur récupération article:', err);
+/* ===== CHARGER ARTICLE ===== */
+function loadArticle(i) {
+  if (i === "") {
+    currentIndex = null;
+    document.querySelectorAll('input,textarea,select').forEach(e=>e.value="");
+    return;
   }
+  currentIndex = Number(i);
+  const a = articles[currentIndex];
+  title.value = a.title;
+  file.value = a.file;
+  rueId.value = a.rueId ?? '';
+  periode.value = a.periode;
+  famille.value = a.famille ?? '';
+  theme.value = a.theme;
+  image.value = a.image ?? '';
+  video.value = a.video ?? '';
+  content.value = '';
 }
 
-// Remplit le formulaire avec les données de l'article si les champs existent
-function fillFormFromArticle(a) {
-  // champs attendus (ajustez les ids si nécessaires)
-  const map = {
-    'title': a.title,
-    'file': a.file,
-    'image': a.image,
-    'video': a.video,
-    'selectRue': a.rueId != null ? String(a.rueId) : '',
-    'selectPeriode': a.periode != null ? String(a.periode) : '',
-    'selectFamille': a.famille != null ? String(a.famille) : '',
-    'selectTheme': a.theme != null ? String(a.theme) : '',
-    'content': a.content || '' // si vous stockez corps d'article
+/* ===== GÉNÉRATION ===== */
+function generate() {
+  const article = {
+    title: title.value,
+    file: file.value,
+    rueId: rueId.value !== "" ? Number(rueId.value) : null,
+    periode: Number(periode.value),
+    famille: famille.value !== "" ? Number(famille.value) : null,
+    theme: Number(theme.value),
+    image: image.value || null,
+    video: video.value || null
   };
 
-  Object.keys(map).forEach(id => {
-    const el = document.getElementById(id);
-    if (!el) return;
-    if (el.tagName === 'SELECT' || el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
-      el.value = map[id] ?? '';
-      // déclencher event change pour éventuels handlers
-      el.dispatchEvent(new Event('change', { bubbles: true }));
-    }
-  });
-
-  // Média preview si présent
-  const preview = document.getElementById('mediaPreview');
-  if (preview) {
-    preview.innerHTML = '';
-    if (a.video) {
-      const v = document.createElement('video');
-      v.controls = true;
-      v.src = a.video;
-      v.style.maxWidth = '100%';
-      preview.appendChild(v);
-    } else if (a.image) {
-      const img = document.createElement('img');
-      img.src = a.image;
-      img.style.maxWidth = '100%';
-      preview.appendChild(img);
-    }
+  if (currentIndex !== null) {
+    articles[currentIndex] = article;
+  } else {
+    articles.push(article);
   }
 
-  // remplir les zones JSON / HTML si la page gére cela
-  const jsonOut = document.getElementById('jsonOutput');
-  if (jsonOut) jsonOut.value = JSON.stringify(a, null, 2);
-}
+  const articleHTML = `
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>${article.title}</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
 
-// vide le formulaire minimalement
-function clearForm() {
-  ['title','file','image','video','content'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.value = '';
-  });
-  ['selectRue','selectPeriode','selectFamille','selectTheme'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.value = '';
-  });
-  const preview = document.getElementById('mediaPreview');
-  if (preview) preview.innerHTML = '';
-  const jsonOut = document.getElementById('jsonOutput');
-  if (jsonOut) jsonOut.value = '';
+<article class="article-fragment">
+  <section>
+    <h2>${article.title}</h2>
+    <p class="date">${options.themes[article.theme]}</p>
+  </section>
+
+  ${article.image ? `<figure><img src="${article.image}"></figure>` : ''}
+  ${article.video ? `<video controls src="${article.video}"></video>` : ''}
+
+  <section class="article-body">
+${content.value}
+  </section>
+</article>
+
+</body>
+</html>`.trim();
+
+  jsonOutput.value = JSON.stringify(article, null, 2);
+  htmlOutput.value = articleHTML;
+
+  downloads.innerHTML = `
+    <a download="${article.file}" href="data:text/html;charset=utf-8,${encodeURIComponent(articleHTML)}">⬇ HTML</a>
+    <a download="articles.json" href="data:application/json;charset=utf-8,${encodeURIComponent(JSON.stringify(articles,null,2))}">⬇ articles.json</a>
+  `;
 }
 </script>
+
 </body>
 </html>
