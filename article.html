@@ -38,7 +38,11 @@
 
 <script>
 (async function(){
-  const esc = s => String(s ?? '');
+  const esc = s => String(s ?? '')
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;');
+
   const params = new URLSearchParams(location.search);
   const fileParam = params.get('file');
   const idParam = params.get('id');
@@ -46,89 +50,76 @@
   try {
     const [articlesRes, optionsRes] = await Promise.all([
       fetch('articles.json'),
-      fetch('options.json').catch(()=>null)
+      fetch('options.json')
     ]);
+
     const articles = await articlesRes.json();
-    const options = optionsRes ? await optionsRes.json() : {};
+    const options = await optionsRes.json();
 
     let article = null;
-    if (fileParam) article = (articles||[]).find(a => String(a.file||'') === fileParam) || null;
-    else if (idParam != null && !Number.isNaN(Number(idParam))) article = articles[Number(idParam)] || null;
-    if (!article && articles && articles.length) article = articles[0];
+    if (fileParam) {
+      article = articles.find(a => a.file === fileParam);
+    } else if (idParam && !isNaN(idParam)) {
+      article = articles[Number(idParam)];
+    }
 
+    if (!article) {
+      document.getElementById('articleRoot').innerHTML = '<p>Article non trouvé.</p>';
+      return;
+    }
+
+    /* ===== Charger le fragment ===== */
+    let fragmentHtml = '';
+    try {
+      const res = await fetch('articles/content/' + article.file);
+      if (res.ok) fragmentHtml = await res.text();
+    } catch(e){}
+
+    if (!fragmentHtml) {
+      fragmentHtml = `<p>Contenu manquant (articles/content/${esc(article.file)})</p>`;
+    }
+
+    /* ===== Résolution des métadonnées ===== */
+    const rue =
+      article.rueId != null && options.rues?.[article.rueId]
+        ? options.rues[article.rueId].nom
+        : '';
+
+    const periode =
+      article.periode != null && options.periodes?.[article.periode]
+        ? options.periodes[article.periode]
+        : '';
+
+    const famille =
+      article.famille != null && options.familles?.[article.famille]
+        ? options.familles[article.famille]
+        : '';
+
+    const theme =
+      article.theme != null && options.themes?.[article.theme]
+        ? options.themes[article.theme]
+        : '';
+
+    const meta = [];
+    if (rue) meta.push(`<a href="carte.html?rue=${article.rueId}">📍 ${esc(rue)}</a>`);
+    if (periode) meta.push(`🕰 ${esc(periode)}`);
+    if (famille) meta.push(`👨‍👩‍👧 ${esc(famille)}`);
+    if (theme) meta.push(`🏷 ${esc(theme)}`);
+
+    /* ===== Injection PROPRE ===== */
     const root = document.getElementById('articleRoot');
-    const footerEl = document.getElementById('siteFooter');
-    if (!article) { root.innerHTML = '<p>Article non trouvé.</p>'; return; }
-
-    // charger fragment de contenu articles/content/<file>
-    let contentHtml = '';
-    if (article.file) {
-      try {
-        const frag = await fetch('articles/content/' + article.file);
-        if (frag.ok) contentHtml = await frag.text();
-        else {
-          const fallback = await fetch(article.file).catch(()=>({ok:false}));
-          if (fallback && fallback.ok) contentHtml = await fallback.text();
-        }
-      } catch(e) { /* ignore */ }
-    }
-
-    // construire label pour la rue (lecture depuis options.json si possible)
-    const normRues = Array.isArray(options.rues) ? options.rues : [];
-    let rueLabel = '';
-    if (article.rueId != null) {
-      if (typeof article.rueId === 'number' || /^\d+$/.test(String(article.rueId))) {
-        const idx = Number(article.rueId);
-        const entry = normRues[idx];
-        rueLabel = entry ? (entry.nom || entry.name || String(entry)) : String(article.rueId);
-      } else {
-        const found = normRues.find(r => String(r.id) === String(article.rueId));
-        rueLabel = found ? (found.nom || found.name || String(found)) : String(article.rueId);
-      }
-    }
-
-    const periode = (article.periode != null && Array.isArray(options.periodes)) ? (options.periodes[article.periode] || article.periode) : (article.periode||'');
-    const famille = article.famille || '';
-    const theme = article.theme || '';
-
-    const metaParts = [];
-    // UTILISER DIRECTEMENT article.rueId pour la redirection vers la carte
-    if (rueLabel) metaParts.push(`<a href="carte.html?rue=${encodeURIComponent(article.rueId)}">📍 ${esc(rueLabel)}</a>`);
-    if (periode) metaParts.push('🕰 ' + esc(periode));
-    if (famille) metaParts.push('👨‍👩‍👧 ' + esc(famille));
-    if (theme) metaParts.push('🏷 ' + esc(theme));
-
-    // injecter contenu
     root.innerHTML = `
-      <article class="article-page">
-        ${contentHtml || `<p>Contenu introuvable (attendu: articles/content/${esc(article.file)})</p>`}
-        <div class="article-meta">${metaParts.join(' • ')}</div>
-        <p><a href="articles.html">← Retour à la liste</a></p>
-      </article>
+      ${fragmentHtml}
+      <div class="article-meta">${meta.join(' • ')}</div>
+      <p><a href="articles.html">← Retour aux articles</a></p>
     `;
 
-    // footer généré localement (sans modifier articles.json)
-    (function renderArticleFooter(a) {
-      if (!a) return;
-      const sourcesText = 'Archives communales de la ville, plan Popp (c.1855), témoignages locaux.';
-      const mapHref = `carte.html?rue=${encodeURIComponent(String(a.rueId ?? ''))}`;
-      const footerHtml = `
-        <div class="article-footer-generated" style="margin-top:12px;padding-top:8px;border-top:1px solid #eee;">
-          <p class="sources"><strong>Sources :</strong> ${esc(sourcesText)}</p>
-          <nav class="article-nav">
-            <a href="${mapHref}">📍 Voir le lieu sur la carte</a>
-            <a href="articles.html">← Retour à la liste des articles</a>
-          </nav>
-        </div>
-      `;
-      footerEl.insertAdjacentHTML('beforeend', footerHtml);
-    })(article);
-
-  } catch (err) {
-    document.getElementById('articleRoot').innerHTML = '<p>Erreur de chargement.</p>';
+  } catch(err) {
     console.error(err);
+    document.getElementById('articleRoot').innerHTML = '<p>Erreur de chargement.</p>';
   }
 })();
 </script>
+
 </body>
 </html>
