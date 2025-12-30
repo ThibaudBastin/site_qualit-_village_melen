@@ -2,106 +2,116 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<title>Ajouter / Modifier un article – Melen</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ajouter / modifier un article</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <link rel="stylesheet" href="style.css">
 
 <script>
-/* ===== LOGIN SIMPLE ===== */
 const PASSWORD = "melen1943";
-if (prompt("Mot de passe requis") !== PASSWORD) {
-  document.body.innerHTML = "<h2 style='text-align:center;margin-top:3rem;'>Accès refusé</h2>";
+if (prompt("Mot de passe requis :") !== PASSWORD) {
+  document.write("<h2 style='text-align:center;margin-top:3rem;'>Accès refusé</h2>");
   throw new Error("Accès refusé");
 }
 </script>
 
 <style>
-body { font-family: sans-serif; margin: 2rem; max-width: 900px }
-.form-group { margin-bottom: 1rem }
-label { font-weight: bold; display:block; margin-bottom:.3rem }
-input, select, textarea { width:100%; padding:.5rem }
-button { margin-top:.5rem; padding:.6rem 1rem; cursor:pointer }
-.preview img, video { max-width:100%; margin-top:1rem; border-radius:6px }
-textarea { font-family: monospace }
+body { font-family: Arial, sans-serif; max-width: 1000px; margin: auto; padding: 1rem; }
+.form-group { margin-bottom: 1rem; }
+label { font-weight: bold; display:block; margin-bottom: .3rem; }
+input, textarea, select { width:100%; padding:.5rem; }
+button { margin-top:.5rem; padding:.6rem 1rem; }
+figure.preview img { max-width:100%; border-radius:6px; }
+figure.preview { margin-top:1rem; }
+iframe { width:100%; height:600px; border:1px solid #ccc; margin-top:1rem; }
+hr { margin:2rem 0; }
 </style>
 </head>
-
 <body>
 
-<h1>Ajouter / Modifier un article</h1>
+<h1>Ajouter / modifier un article</h1>
 
-<div class="form-group">
-  <label>Article existant</label>
-  <select id="articleSelect">
-    <option value="">— Nouvel article —</option>
-  </select>
-</div>
-
-<div class="form-group">
-  <label>Titre</label>
-  <input id="title">
-</div>
-
-<div class="form-group">
-  <label>Nom du fichier HTML</label>
-  <input id="file" placeholder="Article-mon-article.html">
-</div>
-
-<div class="form-group">
-  <label>Rue</label>
-  <select id="rueId"></select>
-</div>
-
-<div class="form-group">
-  <label>Période</label>
-  <select id="periode"></select>
-</div>
-
-<div class="form-group">
-  <label>Famille</label>
-  <select id="famille">
-    <option value="">— Aucune —</option>
-  </select>
-</div>
-
-<div class="form-group">
-  <label>Thème</label>
-  <select id="theme"></select>
-</div>
-
-<div class="form-group">
-  <label>Image (optionnel)</label>
-  <input id="image" placeholder="images/photo.jpg">
-</div>
-
-<div class="form-group">
-  <label>Vidéo mp4 (optionnel)</label>
-  <input id="video" placeholder="videos/video.mp4">
-</div>
-
-<div class="form-group">
-  <label>Texte HTML de l’article</label>
-  <textarea id="content" rows="10"></textarea>
-</div>
-
-<button onclick="generate()">Générer fichiers</button>
+<section class="form-group">
+<label>Article existant</label>
+<select id="articleSelect">
+<option value="">— Nouvel article —</option>
+</select>
+</section>
 
 <hr>
 
-<h3>JSON article</h3>
-<textarea id="jsonOutput" rows="10"></textarea>
+<section>
+<div class="form-group">
+<label>Titre</label>
+<input id="title">
+</div>
 
-<h3>HTML article</h3>
-<textarea id="htmlOutput" rows="15"></textarea>
+<div class="form-group">
+<label>Lead (texte court sous le titre)</label>
+<input id="lead">
+</div>
+
+<div class="form-group">
+<label>Nom du fichier fragment</label>
+<input id="file" placeholder="Article-mon-article.html">
+</div>
+
+<div class="form-group">
+<label>Rue</label>
+<select id="rueId"></select>
+</div>
+
+<div class="form-group">
+<label>Période</label>
+<select id="periode"></select>
+</div>
+
+<div class="form-group">
+<label>Famille</label>
+<select id="famille"></select>
+</div>
+
+<div class="form-group">
+<label>Thème</label>
+<select id="theme"></select>
+</div>
+
+<hr>
+
+<h3>Figures (images)</h3>
+<div id="figures"></div>
+<button onclick="addFigure()">➕ Ajouter une image</button>
+
+<hr>
+
+<div class="form-group">
+<label>Corps de l’article</label>
+<textarea id="body" rows="10" placeholder="Un paragraphe par ligne vide"></textarea>
+</div>
+
+<button onclick="generate()">💾 Générer / mettre à jour</button>
+
+<hr>
+
+<h3>Prévisualisation (article.html)</h3>
+<iframe id="preview"></iframe>
+
+<hr>
+
+<h3>Fragment HTML généré</h3>
+<textarea id="htmlOut" rows="12"></textarea>
+
+<h3>Entrée articles.json</h3>
+<textarea id="jsonOut" rows="8"></textarea>
 
 <div id="downloads"></div>
+</section>
 
 <script>
 let options, articles;
 let currentIndex = null;
 
-/* ===== CHARGEMENT DES DONNÉES ===== */
-(async function init() {
+/* =================== CHARGEMENT =================== */
+(async function(){
   [options, articles] = await Promise.all([
     fetch('options.json').then(r=>r.json()),
     fetch('articles.json').then(r=>r.json())
@@ -112,113 +122,142 @@ let currentIndex = null;
   fillSelect('famille', options.familles, true);
   fillSelect('theme', options.themes);
 
-  populateArticleSelect();
+  const sel = document.getElementById('articleSelect');
+  articles.forEach((a,i)=>{
+    const o=document.createElement('option');
+    o.value=i;
+    o.textContent=a.title;
+    sel.appendChild(o);
+  });
+
+  sel.onchange = ()=> loadArticle(sel.value);
 })();
 
-/* ===== UTILITAIRES ===== */
-function fillSelect(id, arr, allowEmpty=false) {
-  const sel = document.getElementById(id);
-  sel.innerHTML = '';
-  if (allowEmpty) {
-    const o = document.createElement('option');
-    o.value = '';
-    o.textContent = '— Aucune —';
-    sel.appendChild(o);
-  }
-  arr.forEach((txt, i) => {
-    const o = document.createElement('option');
-    o.value = i;
-    o.textContent = txt;
-    sel.appendChild(o);
+function fillSelect(id, arr, nullable=false){
+  const s=document.getElementById(id);
+  s.innerHTML = nullable ? `<option value="">— Aucun —</option>` : '';
+  arr.forEach((v,i)=>{
+    const o=document.createElement('option');
+    o.value=i;
+    o.textContent=v;
+    s.appendChild(o);
   });
 }
 
-function populateArticleSelect() {
-  const sel = document.getElementById('articleSelect');
-  articles.forEach((a,i) => {
-    const o = document.createElement('option');
-    o.value = i;
-    o.textContent = a.title;
-    sel.appendChild(o);
-  });
-  sel.onchange = () => loadArticle(sel.value);
+/* =================== FIGURES =================== */
+function addFigure(src='', caption=''){
+  const d=document.createElement('div');
+  d.innerHTML = `
+    <input placeholder="Image (images/xxx.jpg)" value="${src}">
+    <input placeholder="Légende (optionnel)" value="${caption}">
+    <button onclick="this.parentElement.remove()">❌</button>
+  `;
+  document.getElementById('figures').appendChild(d);
 }
 
-/* ===== CHARGER ARTICLE ===== */
-function loadArticle(i) {
-  if (i === "") {
-    currentIndex = null;
-    document.querySelectorAll('input,textarea,select').forEach(e=>e.value="");
-    return;
-  }
-  currentIndex = Number(i);
+/* =================== CHARGEMENT ARTICLE =================== */
+async function loadArticle(idx){
+  if(idx==='') return location.reload();
+  currentIndex = Number(idx);
   const a = articles[currentIndex];
+
   title.value = a.title;
   file.value = a.file;
   rueId.value = a.rueId ?? '';
   periode.value = a.periode;
   famille.value = a.famille ?? '';
   theme.value = a.theme;
-  image.value = a.image ?? '';
-  video.value = a.video ?? '';
-  content.value = '';
+
+  const frag = await fetch('articles/content/'+a.file).then(r=>r.text());
+  parseFragment(frag);
 }
 
-/* ===== GÉNÉRATION ===== */
-function generate() {
-  const article = {
+function parseFragment(html){
+  const doc=new DOMParser().parseFromString(html,'text/html');
+  lead.value = doc.querySelector('.article-lead')?.textContent || '';
+
+  figures.innerHTML='';
+  doc.querySelectorAll('figure').forEach(f=>{
+    addFigure(
+      f.querySelector('img')?.getAttribute('src')||'',
+      f.querySelector('figcaption')?.textContent||''
+    );
+  });
+
+  body.value = [...doc.querySelectorAll('.article-body p')]
+    .map(p=>p.textContent).join('\n\n');
+}
+
+/* =================== GÉNÉRATION =================== */
+function generate(){
+  const data = {
     title: title.value,
+    lead: lead.value,
     file: file.value,
-    rueId: rueId.value !== "" ? Number(rueId.value) : null,
-    periode: Number(periode.value),
-    famille: famille.value !== "" ? Number(famille.value) : null,
-    theme: Number(theme.value),
-    image: image.value || null,
-    video: video.value || null
+    figures: [...figures.children].map(d=>({
+      src: d.children[0].value,
+      caption: d.children[1].value
+    })),
+    body: body.value
   };
 
-  if (currentIndex !== null) {
-    articles[currentIndex] = article;
-  } else {
-    articles.push(article);
-  }
+  const fragment = generateFragment(data);
+  htmlOut.value = fragment;
 
-  const articleHTML = `
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-<meta charset="UTF-8">
-<title>${article.title}</title>
+  const jsonEntry = {
+    title: data.title,
+    file: data.file,
+    rueId: rueId.value !== '' ? Number(rueId.value) : null,
+    periode: Number(periode.value),
+    famille: famille.value !== '' ? Number(famille.value) : null,
+    theme: Number(theme.value),
+    image: data.figures[0]?.src || null,
+    video: null
+  };
+
+  jsonOut.value = JSON.stringify(jsonEntry,null,2);
+  preview.srcdoc = buildPreview(fragment);
+
+  downloads.innerHTML='';
+  download(fragment, data.file, 'text/html');
+}
+
+/* =================== HELPERS =================== */
+function generateFragment(d){
+return `<article class="article-fragment">
+
+<header class="article-header">
+<h1>${d.title}</h1>
+${d.lead ? `<p class="article-lead">${d.lead}</p>` : ''}
+</header>
+
+${d.figures.map(f=>`
+<figure>
+<img src="${f.src}">
+${f.caption?`<figcaption>${f.caption}</figcaption>`:''}
+</figure>`).join('\n')}
+
+<section class="article-body">
+${d.body.split(/\n\s*\n/).map(p=>`<p>${p}</p>`).join('\n')}
+</section>
+
+</article>`;
+}
+
+function buildPreview(fragment){
+return `
 <link rel="stylesheet" href="style.css">
-</head>
-<body>
+<main style="max-width:900px;margin:auto">
+${fragment}
+</main>`;
+}
 
-<article class="article-fragment">
-  <section>
-    <h2>${article.title}</h2>
-    <p class="date">${options.themes[article.theme]}</p>
-  </section>
-
-  ${article.image ? `<figure><img src="${article.image}"></figure>` : ''}
-  ${article.video ? `<video controls src="${article.video}"></video>` : ''}
-
-  <section class="article-body">
-${content.value}
-  </section>
-</article>
-
-</body>
-</html>`.trim();
-
-  jsonOutput.value = JSON.stringify(article, null, 2);
-  htmlOutput.value = articleHTML;
-
-  downloads.innerHTML = `
-    <a download="${article.file}" href="data:text/html;charset=utf-8,${encodeURIComponent(articleHTML)}">⬇ HTML</a>
-    <a download="articles.json" href="data:application/json;charset=utf-8,${encodeURIComponent(JSON.stringify(articles,null,2))}">⬇ articles.json</a>
-  `;
+function download(content,name,type){
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([content],{type}));
+  a.download=name;
+  a.click();
 }
 </script>
-
 </body>
 </html>
