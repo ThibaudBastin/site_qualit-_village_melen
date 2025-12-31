@@ -87,7 +87,6 @@ hr { margin:2rem 0; }
 </div>
 
 <button onclick="generate()">💾 Générer / mettre à jour</button>
-<button onclick="previewArticle()">👁 Prévisualiser dans iframe</button>
 
 <hr>
 
@@ -121,7 +120,7 @@ let currentIndex = null;
   fillSelect('famille', options.familles, true);
   fillSelect('theme', options.themes);
 
-  const sel = document.getElementById('articleSelect');
+  const sel = articleSelect;
   articles.forEach((a,i)=>{
     const o = document.createElement('option');
     o.value = i;
@@ -152,25 +151,52 @@ function addFigure(src='', caption=''){
     <input placeholder="Légende" value="${caption}">
     <button onclick="this.parentElement.remove()">❌</button>
   `;
-  document.getElementById('figures').appendChild(d);
+  figures.appendChild(d);
 }
 
 /* ===================== LECTURE ARTICLE ===================== */
-function loadArticle(idx){
-  if(idx==='') return;
-
+async function loadArticle(idx){
+  if(idx==='') return; // ne pas reload
   currentIndex = Number(idx);
   const a = articles[currentIndex];
 
-  document.getElementById('title').value = a.title;
-  document.getElementById('file').value = a.file;
-  document.getElementById('rueId').value = a.rueId ?? '';
-  document.getElementById('periode').value = a.periode;
-  document.getElementById('famille').value = a.famille ?? '';
-  document.getElementById('theme').value = a.theme;
-  document.getElementById('body').value = a.body || '';
+  title.value = a.title;
+  file.value = a.file;
+  rueId.value = a.rueId ?? '';
+  periode.value = a.periode;
+  famille.value = a.famille ?? '';
+  theme.value = a.theme;
 
-  // Remplir les figures si présentes
+  // Charger le fragment HTML dans le textarea
+  const path = 'articles/content/' + a.file; // chemin relatif compatible GitHub Pages
+  try {
+    const res = await fetch(path);
+    if (!res.ok) throw new Error(res.status);
+    const html = await res.text();
+
+    // Extraire uniquement le texte du corps pour le textarea
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+    const section = doc.querySelector('.article-body');
+    if(section){
+      const cloned = section.cloneNode(true);
+      // supprimer les figures pour ne garder que le texte
+      cloned.querySelectorAll('figure').forEach(f => f.remove());
+      body.value = cloned.innerText.trim();
+    } else {
+      body.value = '';
+    }
+
+    // Facultatif : prévisualiser dans l'iframe
+    preview.srcdoc = buildPreview(html);
+
+  } catch(e){
+    alert("Fragment introuvable :\n" + path + "\n\nVérifie le nom du fichier.");
+    console.error("Erreur chargement fragment :", path, e);
+    body.value = '';
+  }
+
+  // Remplir les figures si elles existent dans l'objet article
   const figuresDiv = document.getElementById('figures');
   figuresDiv.innerHTML = '';
   if(a.figures){
@@ -178,62 +204,70 @@ function loadArticle(idx){
   }
 }
 
+
+
+
 /* ===================== GÉNÉRATION ===================== */
 function generate(){
-  const figuresData = [...document.getElementById('figures').children].map(d=>({
+  const figuresData = [...figures.children].map(d=>({
     src: d.children[0].value,
     caption: d.children[1].value
   }));
 
   const fragment = generateFragment({
-    title: document.getElementById('title').value,
-    description: document.getElementById('description').value,
+    title: title.value,
+    description: description.value,
     figures: figuresData,
-    body: document.getElementById('body').value
+    body: body.value
   });
 
-  document.getElementById('htmlOut').value = fragment;
+  htmlOut.value = fragment;
 
   const jsonEntry = {
-    title: document.getElementById('title').value,
-    file: document.getElementById('file').value,
-    rueId: document.getElementById('rueId').value !== '' ? Number(document.getElementById('rueId').value) : null,
-    periode: Number(document.getElementById('periode').value),
-    famille: document.getElementById('famille').value !== '' ? Number(document.getElementById('famille').value) : null,
-    theme: Number(document.getElementById('theme').value),
-    figures: figuresData,
-    body: document.getElementById('body').value
+    title: title.value,
+    file: file.value,
+    rueId: rueId.value !== '' ? Number(rueId.value) : null,
+    periode: Number(periode.value),
+    famille: famille.value !== '' ? Number(famille.value) : null,
+    theme: Number(theme.value),
+    image: figuresData[0]?.src || null,
+    video: null
   };
 
-  document.getElementById('jsonOut').value = JSON.stringify(jsonEntry,null,2);
+  jsonOut.value = JSON.stringify(jsonEntry,null,2);
+  preview.srcdoc = buildPreview(fragment);
 
-  document.getElementById('downloads').innerHTML='';
-  download(fragment, document.getElementById('file').value, 'text/html');
-}
-
-/* ===================== PRÉVISUALISATION IFRAME ===================== */
-function previewArticle(){
-  const fileName = document.getElementById('file').value.trim();
-  if(!fileName) { alert('Saisissez un fichier pour prévisualiser'); return; }
-
-  const iframe = document.getElementById('preview');
-  iframe.src = 'articles/content/' + fileName; // Chargement direct dans iframe
+  downloads.innerHTML='';
+  download(fragment, file.value, 'text/html');
 }
 
 /* ===================== HELPERS ===================== */
 function generateFragment(d){
 return `<article class="article-fragment">
   <section class="article-body">
+
     <h1>${d.title}</h1>
+
     ${d.description ? `<p class="date">${d.description}</p>` : ''}
+
     ${d.figures.map(f=>`
     <figure>
       <img src="${f.src}" alt="">
       ${f.caption ? `<figcaption>${f.caption}</figcaption>` : ''}
     </figure>`).join('\n')}
+
     ${d.body.split(/\n\s*\n/).map(p=>`<p>${p}</p>`).join('\n')}
+
   </section>
 </article>`;
+}
+
+function buildPreview(fragment){
+return `
+<link rel="stylesheet" href="style.css">
+<main style="max-width:900px;margin:auto">
+${fragment}
+</main>`;
 }
 
 function download(content,name,type){
@@ -243,6 +277,5 @@ function download(content,name,type){
   a.click();
 }
 </script>
-
 </body>
 </html>
