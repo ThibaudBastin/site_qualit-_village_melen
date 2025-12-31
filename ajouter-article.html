@@ -15,15 +15,15 @@ if (prompt("Mot de passe requis :") !== PASSWORD) {
 </script>
 
 <style>
-body { font-family: Arial, sans-serif; max-width: 1000px; margin: auto; padding: 1rem; }
-.form-group { margin-bottom: 1rem; }
-label { font-weight: bold; display:block; margin-bottom: .3rem; }
-input, textarea, select { width:100%; padding:.5rem; }
-button { margin-top:.5rem; padding:.6rem 1rem; }
-.figure-row { border:1px solid #ddd; padding:.5rem; margin-bottom:.5rem; }
-iframe { width:100%; height:600px; border:1px solid #ccc; margin-top:1rem; }
-hr { margin:2rem 0; }
-.new-option { margin-top:.3rem; display:flex; gap:.5rem; }
+body{font-family:Arial,sans-serif;max-width:1000px;margin:auto;padding:1rem}
+.form-group{margin-bottom:1rem}
+label{font-weight:bold;display:block;margin-bottom:.3rem}
+input,textarea,select{width:100%;padding:.5rem}
+button{margin-top:.5rem;padding:.6rem 1rem}
+.figure-row{border:1px solid #ddd;padding:.5rem;margin-bottom:.5rem}
+iframe{width:100%;height:600px;border:1px solid #ccc;margin-top:1rem}
+hr{margin:2rem 0}
+.new-option{margin-top:.3rem;display:flex;gap:.5rem}
 </style>
 </head>
 <body>
@@ -45,29 +45,38 @@ hr { margin:2rem 0; }
 </div>
 
 <div class="form-group">
-<label>Description</label>
+<label>Description (ligne sous le titre)</label>
 <input id="description">
 </div>
 
 <div class="form-group">
 <label>Nom du fichier fragment</label>
-<input id="file">
+<input id="file" placeholder="Article-mon-article.html">
 </div>
 
+<hr>
+
+<!-- RUE -->
 <div class="form-group">
 <label>Rue</label>
 <select id="rueId"></select>
+
 <div class="new-option">
-<button onclick="addRue()">➕ Ajouter une rue</button>
+<input id="newRueNom" placeholder="Nom de la rue">
+<input id="newRueId" placeholder="Identifiant (ex: rue-reux)">
+<input id="newRueLat" placeholder="Latitude">
+<input id="newRueLng" placeholder="Longitude">
+<button onclick="addRue()">➕ Ajouter rue</button>
 </div>
 </div>
 
+<!-- AUTRES OPTIONS -->
 <div class="form-group">
 <label>Période</label>
 <select id="periode"></select>
 <div class="new-option">
 <input id="newPeriode" placeholder="Nouvelle période">
-<button onclick="addSimpleOption('periodes')">➕ Ajouter</button>
+<button onclick="addSimpleOption('periodes','newPeriode','periode')">➕</button>
 </div>
 </div>
 
@@ -76,7 +85,7 @@ hr { margin:2rem 0; }
 <select id="famille"></select>
 <div class="new-option">
 <input id="newFamille" placeholder="Nouvelle famille">
-<button onclick="addSimpleOption('familles')">➕ Ajouter</button>
+<button onclick="addSimpleOption('familles','newFamille','famille')">➕</button>
 </div>
 </div>
 
@@ -85,7 +94,7 @@ hr { margin:2rem 0; }
 <select id="theme"></select>
 <div class="new-option">
 <input id="newTheme" placeholder="Nouveau thème">
-<button onclick="addSimpleOption('themes')">➕ Ajouter</button>
+<button onclick="addSimpleOption('themes','newTheme','theme')">➕</button>
 </div>
 </div>
 
@@ -111,23 +120,24 @@ hr { margin:2rem 0; }
 
 <hr>
 
-<h3>articles.json</h3>
+<h3>Fragment HTML</h3>
+<textarea id="htmlOut" rows="10"></textarea>
+
+<h3>Entrée articles.json</h3>
 <textarea id="jsonOut" rows="8"></textarea>
 
-<h3>options.json</h3>
-<textarea id="optionsOut" rows="10"></textarea>
+<h3>Options.json</h3>
+<textarea id="optionsOut" rows="8"></textarea>
 
 <div id="downloads"></div>
 
 <script>
-let options={}, articles=[];
+let options={},articles=[],currentIndex=null;
 
 /* ===================== CHARGEMENT ===================== */
-(async()=>{
-  [options,articles]=await Promise.all([
-    fetch('options.json').then(r=>r.json()),
-    fetch('articles.json').then(r=>r.json())
-  ]);
+(async function(){
+  options = await fetch('options.json').then(r=>r.json());
+  articles = await fetch('articles.json').then(r=>r.json());
 
   fillRues();
   fillSelect('periode',options.periodes);
@@ -144,7 +154,16 @@ let options={}, articles=[];
   articleSelect.onchange=()=>loadArticle(articleSelect.value);
 })();
 
-/* ===================== SELECTS ===================== */
+function fillRues(){
+  rueId.innerHTML='<option value="">— Aucun —</option>';
+  options.rues.forEach((r,i)=>{
+    const o=document.createElement('option');
+    o.value=i;
+    o.textContent=r.nom;
+    rueId.appendChild(o);
+  });
+}
+
 function fillSelect(id,arr,nullable=false){
   const s=document.getElementById(id);
   s.innerHTML=nullable?'<option value="">— Aucun —</option>':'';
@@ -156,63 +175,61 @@ function fillSelect(id,arr,nullable=false){
   });
 }
 
-function fillRues(){
-  rueId.innerHTML='<option value="">— Aucun —</option>';
-  options.rues.forEach((r,i)=>{
-    const o=document.createElement('option');
-    o.value=i;
-    o.textContent=r.nom;
-    rueId.appendChild(o);
-  });
+/* ===================== AJOUT OPTIONS ===================== */
+function addSimpleOption(type,inputId,selectId){
+  const v=document.getElementById(inputId).value.trim();
+  if(!v) return;
+  options[type].push(v);
+  document.getElementById(inputId).value='';
+  fillSelect(selectId,options[type],selectId==='famille');
+  optionsOut.value=JSON.stringify(options,null,2);
 }
 
-/* ===================== AJOUT RUE ===================== */
 function addRue(){
-  const nom=prompt("Nom de la rue");
-  if(!nom) return;
+  const nom=newRueNom.value.trim();
+  const id=newRueId.value.trim();
+  const lat=parseFloat(newRueLat.value);
+  const lng=parseFloat(newRueLng.value);
+  if(!nom||!id||isNaN(lat)||isNaN(lng)) return alert("Rue invalide");
 
-  const id=prompt("Identifiant unique (ex: rue-reux)");
-  if(!id) return;
-
-  const lat=parseFloat(prompt("Latitude"));
-  const lng=parseFloat(prompt("Longitude"));
-  if(isNaN(lat)||isNaN(lng)) return alert("Coordonnées invalides");
-
-  options.rues.push({
-    id,
-    nom,
-    coords:[lat,lng]
-  });
-
+  options.rues.push({id,nom,coords:[lat,lng]});
+  newRueNom.value=newRueId.value=newRueLat.value=newRueLng.value='';
   fillRues();
   optionsOut.value=JSON.stringify(options,null,2);
 }
 
-/* ===================== OPTIONS SIMPLES ===================== */
-function addSimpleOption(type){
-  const input=document.getElementById('new'+type.charAt(0).toUpperCase()+type.slice(1));
-  const val=input.value.trim();
-  if(!val) return;
-  options[type].push(val);
-  input.value='';
-  fillSelect(type,options[type],type==='familles');
-  optionsOut.value=JSON.stringify(options,null,2);
-}
-
 /* ===================== FIGURES ===================== */
-function addFigure(src='',cap=''){
+function addFigure(src='',caption=''){
   const d=document.createElement('div');
   d.className='figure-row';
   d.innerHTML=`
-    <input value="${src}" placeholder="Image">
-    <input value="${cap}" placeholder="Légende">
+    <input placeholder="Image" value="${src}">
+    <input placeholder="Légende" value="${caption}">
     <button onclick="this.parentElement.remove()">❌</button>`;
   figures.appendChild(d);
 }
 
+/* ===================== LECTURE ARTICLE ===================== */
+async function loadArticle(i){
+  if(i==='')return;
+  const a=articles[i];
+  title.value=a.title;
+  file.value=a.file;
+  rueId.value=a.rueId??'';
+  periode.value=a.periode;
+  famille.value=a.famille??'';
+  theme.value=a.theme;
+
+  try{
+    const html=await fetch('articles/content/'+a.file).then(r=>r.text());
+    htmlOut.value=html;
+    preview.srcdoc=buildPreview(html);
+  }catch{}
+}
+
 /* ===================== GÉNÉRATION ===================== */
 function generate(){
-  const figuresData=[...figures.children].map(d=>({
+  const figs=[...figures.children].map(d=>({
     src:d.children[0].value,
     caption:d.children[1].value
   }));
@@ -220,9 +237,11 @@ function generate(){
   const fragment=generateFragment({
     title:title.value,
     description:description.value,
-    figures:figuresData,
+    figures:figs,
     body:body.value
   });
+
+  htmlOut.value=fragment;
 
   const entry={
     title:title.value,
@@ -231,13 +250,12 @@ function generate(){
     periode:Number(periode.value),
     famille:famille.value!==''?Number(famille.value):null,
     theme:Number(theme.value),
-    image:figuresData[0]?.src||null,
+    image:figs[0]?.src||null,
     video:null
   };
 
   jsonOut.value=JSON.stringify(entry,null,2);
   optionsOut.value=JSON.stringify(options,null,2);
-
   preview.srcdoc=buildPreview(fragment);
 
   downloads.innerHTML='';
@@ -246,57 +264,37 @@ function generate(){
   download(JSON.stringify(options,null,2),'options.json','application/json');
 }
 
+/* ===================== FRAGMENT / PREVIEW ===================== */
+function generateFragment(d){
+return `<article class="article-fragment">
+<section class="article-body">
+<h1>${d.title}</h1>
+${d.description?`<p class="date">${d.description}</p>`:''}
+${d.figures.map(f=>`
+<figure>
+<img src="${f.src}">
+${f.caption?`<figcaption>${f.caption}</figcaption>`:''}
+</figure>`).join('')}
+${d.body.split(/\n\s*\n/).map(p=>`<p>${p}</p>`).join('')}
+</section>
+</article>`;
+}
 
-/* ===================== UTILS ===================== */
+function buildPreview(fragment){
+return `<!DOCTYPE html><html><head>
+<meta charset="UTF-8">
+<link rel="stylesheet" href="style.css">
+</head><body>
+<main style="max-width:900px;margin:auto">${fragment}</main>
+</body></html>`;
+}
+
 function download(c,n,t){
   const a=document.createElement('a');
   a.href=URL.createObjectURL(new Blob([c],{type:t}));
   a.download=n;
   a.click();
 }
-/* ===================== FRAGMENT HTML ===================== */
-function generateFragment(data){
-  return `
-<article class="article-fragment">
-  <section class="article-body">
-
-    <h1>${data.title}</h1>
-
-    ${data.description ? `<p class="date">${data.description}</p>` : ''}
-
-    ${data.figures.map(f => `
-    <figure>
-      <img src="${f.src}" alt="">
-      ${f.caption ? `<figcaption>${f.caption}</figcaption>` : ''}
-    </figure>
-    `).join('')}
-
-    ${data.body
-      .split(/\n\s*\n/)
-      .map(p => `<p>${p}</p>`)
-      .join('\n')}
-
-  </section>
-</article>`;
-}
-
-function buildPreview(fragment){
-  return `
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-<meta charset="UTF-8">
-<link rel="stylesheet" href="style.css">
-</head>
-<body>
-<main style="max-width:900px;margin:auto">
-${fragment}
-</main>
-</body>
-</html>`;
-}
-
 </script>
-
 </body>
 </html>
