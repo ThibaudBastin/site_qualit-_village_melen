@@ -58,7 +58,10 @@ hr { margin:2rem 0; }
 <label>Rue</label>
 <select id="rueId"></select>
 <div class="new-option">
-<input id="newRue" placeholder="Nouvelle rue">
+<input id="newRueNom" placeholder="Nom de la rue">
+<input id="newRueId" placeholder="Identifiant unique">
+<input id="newRueLat" placeholder="Latitude">
+<input id="newRueLng" placeholder="Longitude">
 <button onclick="addRue()">➕ Ajouter</button>
 </div>
 </div>
@@ -185,11 +188,24 @@ function addSimpleOption(type){
 }
 
 function addRue(){
-  const nom=prompt("Nom de la rue");
-  if(!nom)return;
-  options.rues.push({nom});
+  const nom = document.getElementById('newRueNom').value.trim();
+  const id  = document.getElementById('newRueId').value.trim();
+  const lat = parseFloat(document.getElementById('newRueLat').value);
+  const lng = parseFloat(document.getElementById('newRueLng').value);
+
+  if(!nom || !id || isNaN(lat) || isNaN(lng)){
+    return alert("Veuillez remplir nom, identifiant et coordonnées valides.");
+  }
+
+  options.rues.push({nom, id, coords:[lat,lng]});
   fillSelectRues();
-  optionsOut.value=JSON.stringify(options,null,2);
+  optionsOut.value = JSON.stringify(options,null,2);
+
+  // Réinitialiser champs
+  document.getElementById('newRueNom').value = '';
+  document.getElementById('newRueId').value = '';
+  document.getElementById('newRueLat').value = '';
+  document.getElementById('newRueLng').value = '';
 }
 
 /* ===================== FIGURES ===================== */
