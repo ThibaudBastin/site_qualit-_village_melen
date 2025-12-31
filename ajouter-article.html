@@ -167,28 +167,23 @@ async function loadArticle(idx){
   famille.value = a.famille ?? '';
   theme.value = a.theme;
 
-  const html = await fetch('articles/content/' + a.file).then(r=>r.text());
-  parseFragment(html);
-}
+  const path = 'articles/content/' + a.file;
 
-function parseFragment(html){
-  const doc = new DOMParser().parseFromString(html,'text/html');
-  const root = doc.querySelector('.article-fragment');
-
-  description.value = root.querySelector('.date')?.textContent.trim() || '';
-
-  figures.innerHTML='';
-  root.querySelectorAll('figure').forEach(f=>{
-    addFigure(
-      f.querySelector('img')?.getAttribute('src') || '',
-      f.querySelector('figcaption')?.textContent.trim() || ''
+  try {
+    const res = await fetch(path);
+    if (!res.ok) throw new Error(res.status);
+    const html = await res.text();
+    parseFragment(html);
+  } catch (e) {
+    alert(
+      "Fragment introuvable :\n" +
+      path +
+      "\n\nVérifie le nom du fichier (majuscules / minuscules)."
     );
-  });
-
-  body.value = [...root.querySelectorAll('.article-body p:not(.date)')]
-    .map(p=>p.textContent.trim())
-    .join('\n\n');
+    console.error("Erreur chargement fragment :", path, e);
+  }
 }
+
 
 /* ===================== GÉNÉRATION ===================== */
 function generate(){
