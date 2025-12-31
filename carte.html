@@ -1,19 +1,16 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Carte du Village</title>
-
-  <!-- Leaflet CSS -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-
-  <style>
-    body { margin:0; font-family: Arial, sans-serif; }
-    header, nav, footer { padding: 10px; background:#2f6f5e; color:#fff; }
-    nav a { color:#fff; margin-right:10px; text-decoration:none; }
-    #map { width: 100%; height: 70vh; margin-top:10px; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Carte du Village</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<style>
+  body { margin:0; font-family: Arial, sans-serif; }
+  header, nav, footer { padding: 10px; background:#2f6f5e; color:#fff; }
+  nav a { color:#fff; margin-right:10px; text-decoration:none; }
+  #map { width: 100%; height: 70vh; margin-top:10px; }
+</style>
 </head>
 <body>
 
@@ -25,9 +22,7 @@
     <a href="carte.html">Carte</a>
     <a href="agenda.html">Agenda</a>
     <a href="contact.html">Contacts</a>
-         <a href="ajouter-article.html" style="opacity:0.5;font-size:0.9em;">
-    ➕ Ajouter
-    </a>
+    <a href="ajouter-article.html" style="opacity:0.5;font-size:0.9em;">➕ Ajouter</a>
   </nav>
 </header>
 
@@ -37,183 +32,86 @@
   <p>© 2025 – Groupement Intercommunal</p>
 </footer>
 
-<!-- Leaflet JS -->
-  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script>
+(async function() {
+  try {
+    const [optsRes, artsRes] = await Promise.all([
+      fetch('options.json'),
+      fetch('articles.json')
+    ]);
+    const options = await optsRes.json();
+    const articles = await artsRes.json();
 
-  <script>
-  (async function () {
-    try {
-      const [optsRes, artsRes, lieuxRes] = await Promise.all([
-        fetch('options.json'),
-        fetch('articles.json'),
-        fetch('lieux.json')
-      ]);
-      const options = await optsRes.json();
-      const articles = await artsRes.json();
-      const lieux = await lieuxRes.json();
+    const map = L.map('map').setView([50.646374, 5.736361], 15);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '© OpenStreetMap'
+    }).addTo(map);
 
-      const map = L.map('map').setView([50.646374, 5.736361], 15);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        attribution: '© OpenStreetMap'
-      }).addTo(map);
+    const esc = s => String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').trim();
 
-      const esc = s => String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').trim();
+    const lieuxList = Array.isArray(options.rues)
+      ? options.rues.map(r => ({ id: String(r.id), nom: r.nom, coords: r.coords || null }))
+      : [];
+    const lieuxMap = {};
+    lieuxList.forEach(l => { lieuxMap[l.id] = l; });
 
-      // normalize options.rues into array of { id, nom } (supports old string-array and new object-array)
-      const rawRues = Array.isArray(options.rues) ? options.rues : [];
-      const rues = rawRues.map((r, i) => {
-        if (r && typeof r === 'object') return { id: String(r.id ?? i), nom: r.nom ?? r.name ?? '' };
-        return { id: String(i), nom: String(r || '') };
-      });
+    const articlesByLieu = {};
+    const pushArticle = (key, a) => {
+      if (!articlesByLieu[key]) articlesByLieu[key] = [];
+      articlesByLieu[key].push(a);
+    };
 
-      // build quick map of lieu.id -> lieu
-      const lieuxList = Array.isArray(lieux) ? lieux : Object.values(lieux || {});
-      const lieuxMap = {};
-      lieuxList.forEach(l => { if (l && l.id != null) lieuxMap[String(l.id)] = l; });
+    articles.forEach(a => {
+      if (!a || a.rueId == null) return;
+      const id = typeof a.rueId === 'number' ? lieuxList[a.rueId]?.id : String(a.rueId);
+      if (!id) return pushArticle('__sans_lieu', a);
+      pushArticle(id, a);
+    });
 
-      // helper coords normalization
-      const toLatLng = c => {
-        if (!c) return null;
-        if (Array.isArray(c) && c.length >= 2) return c;
-        if (c.lat != null && (c.lng != null || c.lon != null)) return [c.lat, c.lng ?? c.lon];
-        return null;
-      };
+    const toLatLng = c => Array.isArray(c) && c.length >= 2 ? c : null;
 
-      // map options index -> lieu id (when options.rues elements correspond to lieux by id)
-      const optionIndexToId = {};
-      rues.forEach((r, idx) => { optionIndexToId[String(idx)] = r.id; });
+    lieuxList.forEach(lieu => {
+      const arts = articlesByLieu[lieu.id] || [];
+      const latlng = toLatLng(lieu.coords);
+      if (!latlng) return;
+      const popupHtml = `<strong>${esc(lieu.nom)}</strong><br>` + 
+        (arts.length ? '<ul>' + arts.map(a=>`<li><a href="article.html?file=${a.file}">${esc(a.title)}</a></li>`).join('') + '</ul>' : '<em>Aucun article</em>');
+      L.marker(latlng).addTo(map).bindPopup(popupHtml);
+    });
 
-      // index articles by lieu id (articles.rueId may be numeric index into options.rues OR a lieu id string)
-      const articlesByLieu = {};
-      const pushArticle = (key, a) => {
-        if (!articlesByLieu[key]) articlesByLieu[key] = [];
-        articlesByLieu[key].push(a);
-      };
-
-      (articles || []).forEach(a => {
-        if (a == null) return;
-        // null/undefined => sans lieu
-        if (a.rueId == null) { pushArticle('__sans_lieu', a); return; }
-
-        const rid = a.rueId;
-        // number -> treat as index into options.rues
-        if (typeof rid === 'number' || (/^\d+$/.test(String(rid)))) {
-          const idxKey = String(rid);
-          const mappedLieuId = optionIndexToId[idxKey];
-          if (mappedLieuId && lieuxMap[mappedLieuId]) {
-            pushArticle(mappedLieuId, a);
-            return;
-          }
-          // if options.rues contains names that match lieux (fallback): find by nom equality
-          const possibleNom = rues[Number(idxKey)]?.nom;
-          if (possibleNom) {
-            const found = lieuxList.find(l => String((l.nom || l.name || '')).trim().toLowerCase() === String(possibleNom).trim().toLowerCase());
-            if (found) { pushArticle(String(found.id), a); return; }
-          }
-          // fallback: push to sans_lieu
-          pushArticle('__sans_lieu', a);
-          return;
-        }
-
-        // string -> could be a lieu id directly or an option id
-        const ridStr = String(rid);
-        if (lieuxMap[ridStr]) { pushArticle(ridStr, a); return; }
-        // maybe it's an option entry id (options.rues entries may have id equal to lieu.id)
-        const optionMatch = rues.find(r => r.id === ridStr);
-        if (optionMatch && lieuxMap[optionMatch.id]) { pushArticle(optionMatch.id, a); return; }
-
-        // final fallback: try matching by name against lieux.nom
-        const matchByName = lieuxList.find(l => String(l.nom || l.name || '').trim().toLowerCase() === ridStr.trim().toLowerCase());
-        if (matchByName) { pushArticle(String(matchByName.id), a); return; }
-
-        pushArticle('__sans_lieu', a);
-      });
-
-      // create markers for each lieu
-      lieuxList.forEach(lieu => {
-        const idKey = String(lieu.id);
-        const artsForLieu = articlesByLieu[idKey] || [];
-
-        let popupHtml = `<strong>${esc(lieu.nom || lieu.name || '—')}</strong><br>`;
-        if (artsForLieu.length) {
-          popupHtml += '<ul style="margin:0;padding-left:1rem">';
-          artsForLieu.forEach(a => {
-            popupHtml += `<li>
-                <a href="article.html?file=${encodeURIComponent(a.file)}">
-                    ${esc(a.title || 'Sans titre')}
-                </a>
-                </li>`;
-          });
-          popupHtml += '</ul>';
-        } else {
-          popupHtml += `<em>Aucun article pour ce lieu</em>`;
-        }
-
-        const latlng = toLatLng(lieu.coords || lieu.coord || lieu.location);
-        if (latlng) L.marker(latlng).addTo(map).bindPopup(popupHtml);
-      });
-
-      // show popup for articles without matching lieu
-      const sans = articlesByLieu['__sans_lieu'] || [];
-
-        if (sans.length) {
-        const btn = L.control({ position: 'topright' });
-
-        btn.onAdd = function () {
-            const div = L.DomUtil.create('div', 'leaflet-bar');
-            div.style.background = '#fff';
-            div.style.padding = '6px';
-            div.style.cursor = 'pointer';
-            div.innerHTML = '📄 Articles sans lieu';
-
-            div.onclick = () => {
-            const html = `
-                <strong>Articles sans lieu associé</strong>
-                <ul style="margin:0;padding-left:1rem">
-                ${sans.map(a =>
-                    `<li>
-                    <a href="article.html?file=${encodeURIComponent(a.file)}">
-                        ${esc(a.title)}
-                    </a>
-                    </li>`
-                ).join('')}
-                </ul>`;
-            L.popup({ maxWidth: 400 })
-                .setLatLng(map.getCenter())
-                .setContent(html)
-                .openOn(map);
-            };
-
-            return div;
+    const sans = articlesByLieu['__sans_lieu'] || [];
+    if (sans.length) {
+      const btn = L.control({ position: 'topright' });
+      btn.onAdd = function () {
+        const div = L.DomUtil.create('div', 'leaflet-bar');
+        div.style.background = '#fff';
+        div.style.padding = '6px';
+        div.style.cursor = 'pointer';
+        div.innerHTML = '📄 Articles sans lieu';
+        div.onclick = () => {
+          const html = `<strong>Articles sans lieu associé</strong><ul>` + sans.map(a=>`<li><a href="article.html?file=${encodeURIComponent(a.file)}">${esc(a.title)}</a></li>`).join('') + '</ul>';
+          L.popup({ maxWidth: 400 }).setLatLng(map.getCenter()).setContent(html).openOn(map);
         };
-
-        btn.addTo(map);
-        }
-
-
-      // support ?rue=<lieuId> or ?rue=<optionsIndex>
-      const params = new URLSearchParams(window.location.search);
-      const rueParam = params.get('rue');
-      if (rueParam) {
-        let target = lieuxMap[String(rueParam)];
-        if (!target && /^\d+$/.test(rueParam)) {
-          // numeric => options index
-          const mapped = optionIndexToId[String(rueParam)];
-          if (mapped) target = lieuxMap[mapped];
-        }
-        if (target) {
-          const latlng = toLatLng(target.coords || target.coord || target.location);
-          if (latlng) map.setView(latlng, 18);
-        }
-      }
-    } catch (err) {
-      console.error('Erreur chargement carte:', err);
-      const mapContainer = document.getElementById('map');
-      if (mapContainer) mapContainer.innerHTML = '<p>Erreur lors du chargement de la carte.</p>';
+        return div;
+      };
+      btn.addTo(map);
     }
-  })();
-  </script>
+
+    const params = new URLSearchParams(window.location.search);
+    const rueParam = params.get('rue');
+    if (rueParam && lieuxMap[rueParam]) {
+      const latlng = toLatLng(lieuxMap[rueParam].coords);
+      if (latlng) map.setView(latlng, 18);
+    }
+
+  } catch (err) {
+    console.error('Erreur chargement carte:', err);
+    document.getElementById('map').innerHTML = '<p>Erreur lors du chargement de la carte.</p>';
+  }
+})();
+</script>
 
 </body>
 </html>

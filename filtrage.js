@@ -1,19 +1,25 @@
 (async function () {
   try {
-    const [optRes, artRes, lieuxRes] = await Promise.all([
+    const [optRes, artRes] = await Promise.all([
       fetch('options.json'),
-      fetch('articles.json'),
-      fetch('lieux.json')
+      fetch('articles.json')
     ]);
     const options = await optRes.json();
     const articles = await artRes.json();
-    const lieuxRaw = await lieuxRes.json();
 
-    // normaliser lieux en map par id
-    const lieuxList = Array.isArray(lieuxRaw) ? lieuxRaw : Object.values(lieuxRaw || {});
+    // normaliser lieux depuis options.rues
+    const normalizedRues = Array.isArray(options.rues)
+      ? options.rues.map((r, i) => ({
+          index: String(i),
+          id: String(r.id ?? i),
+          nom: String(r.nom ?? r.name ?? ''),
+          coords: r.coords || null
+        }))
+      : [];
+
     const lieuxMap = {};
-    lieuxList.forEach(l => {
-      if (l && l.id != null) lieuxMap[String(l.id)] = l;
+    normalizedRues.forEach(l => {
+      lieuxMap[l.id] = l;
     });
 
     const selRue = document.getElementById('filterRue');
@@ -21,17 +27,6 @@
     const selFam = document.getElementById('filterFamille');
     const selThe = document.getElementById('filterTheme');
     const container = document.getElementById('articlesList');
-
-    // Normaliser options.rues en tableau d'objets { index, id, nom }
-    const normalizedRues = Array.isArray(options.rues)
-      ? options.rues.map((r, i) => {
-          if (r && typeof r === 'object') {
-            return { index: String(i), id: String(r.id ?? i), nom: String(r.nom ?? r.name ?? '') };
-          }
-          // string case
-          return { index: String(i), id: String(i), nom: String(r ?? '') };
-        })
-      : [];
 
     function fillSelect(id, arr, placeholder, isRueObjects = false) {
       const sel = document.getElementById(id);
@@ -45,20 +40,11 @@
       (arr || []).forEach((item, i) => {
         const o = document.createElement('option');
         if (isRueObjects) {
-          // item is { index, id, nom }
           o.value = item.index;
           o.textContent = item.nom || item.id || `Rue ${item.index}`;
         } else {
-          if (typeof item === 'string') {
-            o.value = String(i);
-            o.textContent = item;
-          } else if (item && typeof item === 'object') {
-            o.value = String(item.id ?? i);
-            o.textContent = item.nom ?? item.name ?? String(item);
-          } else {
-            o.value = String(i);
-            o.textContent = String(item);
-          }
+          o.value = String(i);
+          o.textContent = item;
         }
         sel.appendChild(o);
       });
@@ -78,51 +64,26 @@
         .replace(/'/g, '&#39;');
     }
 
-    // resolve article -> { name: string, linkParam: string }
     function resolveLieuForArticle(a) {
-      if (a == null || a.rueId == null) return { name: '', linkParam: '' };
+      if (!a || a.rueId == null) return { name: '', linkParam: '' };
 
-      // If numeric index (number or numeric string) => index into options.rues
-      if (typeof a.rueId === 'number' || (/^\d+$/.test(String(a.rueId)))) {
-        const idx = Number(a.rueId);
-        const entry = normalizedRues[idx];
-        if (entry) {
-          // try map to lieux by entry.id
-          const lieu = lieuxMap[String(entry.id)];
-          if (lieu) return { name: String(lieu.nom || lieu.name || entry.nom || ''), linkParam: String(lieu.id) };
-          // fallback to name from options
-          return { name: String(entry.nom || entry.id || ''), linkParam: String(entry.index) };
-        }
-        // no options entry found -> treat as string fallback
+      const idx = typeof a.rueId === 'number' ? a.rueId : Number(a.rueId);
+      if (!isNaN(idx) && normalizedRues[idx]) {
+        const r = normalizedRues[idx];
+        return { name: r.nom, linkParam: r.id };
       }
 
-      // treat as string id (could be lieu.id or option entry id)
-      const rid = String(a.rueId);
-      // direct match to lieux
-      if (lieuxMap[rid]) return { name: String(lieuxMap[rid].nom || lieuxMap[rid].name || ''), linkParam: rid };
+      const r = lieuxMap[String(a.rueId)];
+      if (r) return { name: r.nom, linkParam: r.id };
 
-      // maybe options.rues contains an object with id === rid
-      const optionMatch = normalizedRues.find(r => r.id === rid || r.nom === rid);
-      if (optionMatch) {
-        const lieu = lieuxMap[String(optionMatch.id)];
-        if (lieu) return { name: String(lieu.nom || lieu.name || optionMatch.nom), linkParam: String(lieu.id) };
-        return { name: String(optionMatch.nom || optionMatch.id), linkParam: optionMatch.index };
-      }
-
-      // last attempt: match by name (case-insensitive) against lieux.nom
-      const lowerRid = rid.trim().toLowerCase();
-      const foundByName = lieuxList.find(l => String(l.nom || l.name || '').trim().toLowerCase() === lowerRid);
-      if (foundByName) return { name: String(foundByName.nom || foundByName.name || ''), linkParam: String(foundByName.id) };
-
-      // nothing found
       return { name: '', linkParam: '' };
     }
 
     function applyFilters(allArticles) {
-      const fRue = selRue ? selRue.value : '';
-      const fPer = selPer ? selPer.value : '';
-      const fFam = selFam ? selFam.value : '';
-      const fThe = selThe ? selThe.value : '';
+      const fRue = selRue.value;
+      const fPer = selPer.value;
+      const fFam = selFam.value;
+      const fThe = selThe.value;
 
       const filtered = (allArticles || []).filter(a => {
         if (fRue !== '' && String(a.rueId) !== fRue) return false;
@@ -184,12 +145,12 @@
       });
     }
 
-    // attach listeners
     [selRue, selPer, selFam, selThe].forEach(s => {
       if (s) s.addEventListener('change', () => applyFilters(articles));
     });
 
     applyFilters(articles);
+
   } catch (err) {
     console.error('Erreur fetch/options:', err);
     const container = document.getElementById('articlesList');

@@ -12,11 +12,11 @@
     main{padding:18px;max-width:900px;margin:0 auto}
     .article-meta{color:#666;margin-top:12px}
     .article-fragment img{max-width:100%;height:auto;border-radius:6px}
-    .footer-sources ul{margin:6px 0 0 1.2em;padding:0}
     .article-nav a{margin-right:8px}
   </style>
 </head>
 <body>
+
 <header>
   <h1>Groupement Intercommunal</h1>
   <nav>
@@ -32,7 +32,7 @@
   <p>Chargement de l’article…</p>
 </main>
 
-<footer id="siteFooter">
+<footer>
   <p>© 2025 – Qualité village Melen</p>
 </footer>
 
@@ -56,6 +56,7 @@
     const articles = await articlesRes.json();
     const options = await optionsRes.json();
 
+    /* ===== Trouver l’article ===== */
     let article = null;
     if (fileParam) {
       article = articles.find(a => a.file === fileParam);
@@ -68,7 +69,7 @@
       return;
     }
 
-    /* ===== Charger le fragment ===== */
+    /* ===== Charger le fragment HTML ===== */
     let fragmentHtml = '';
     try {
       const res = await fetch('articles/content/' + article.file);
@@ -80,10 +81,27 @@
     }
 
     /* ===== Résolution des métadonnées ===== */
-    const rue =
-      article.rueId != null && options.rues?.[article.rueId]
-        ? options.rues[article.rueId].nom
-        : '';
+
+    // ---- RUE / LIEU (nouveau format + rétrocompatibilité)
+    let rue = '';
+    let rueId = '';
+
+    if (article.rueId != null && Array.isArray(options.rues)) {
+      // cas index numérique
+      if (!isNaN(article.rueId) && options.rues[Number(article.rueId)]) {
+        const r = options.rues[Number(article.rueId)];
+        rue = r.nom;
+        rueId = r.id;
+      }
+      // cas id string
+      else {
+        const found = options.rues.find(r => r.id === article.rueId);
+        if (found) {
+          rue = found.nom;
+          rueId = found.id;
+        }
+      }
+    }
 
     const periode =
       article.periode != null && options.periodes?.[article.periode]
@@ -100,18 +118,21 @@
         ? options.themes[article.theme]
         : '';
 
+    /* ===== Métadonnées ===== */
     const meta = [];
-    if (rue) meta.push(`<a href="carte.html?rue=${article.rueId}">📍 ${esc(rue)}</a>`);
+    if (rue) meta.push(`<a href="carte.html?rue=${encodeURIComponent(rueId)}">📍 ${esc(rue)}</a>`);
     if (periode) meta.push(`🕰 ${esc(periode)}`);
     if (famille) meta.push(`👨‍👩‍👧 ${esc(famille)}`);
     if (theme) meta.push(`🏷 ${esc(theme)}`);
 
-    /* ===== Injection PROPRE ===== */
+    /* ===== Injection propre ===== */
     const root = document.getElementById('articleRoot');
     root.innerHTML = `
       ${fragmentHtml}
       <div class="article-meta">${meta.join(' • ')}</div>
-      <p><a href="articles.html">← Retour aux articles</a></p>
+      <p class="article-nav">
+        <a href="articles.html">← Retour aux articles</a>
+      </p>
     `;
 
   } catch(err) {
