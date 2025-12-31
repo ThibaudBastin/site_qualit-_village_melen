@@ -176,12 +176,29 @@ async function loadArticle(idx){
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, 'text/html');
     const section = doc.querySelector('.article-body');
+
     if(section){
-      // extraire le texte des paragraphes uniquement
-      const paragraphs = Array.from(section.querySelectorAll('p'));
+      // 1️⃣ Récupérer la description (p.date)
+      const dateP = section.querySelector('p.date');
+      description.value = dateP ? dateP.innerText.trim() : '';
+
+      // 2️⃣ Récupérer le corps de texte (tous les <p> sauf p.date)
+      const paragraphs = Array.from(section.querySelectorAll('p'))
+                              .filter(p => !p.classList.contains('date'));
       body.value = paragraphs.map(p => p.innerText.trim()).join('\n\n');
+
+      // 3️⃣ Récupérer les images et légendes
+      const figuresDiv = document.getElementById('figures');
+      figuresDiv.innerHTML = '';
+      section.querySelectorAll('figure').forEach(f => {
+        const img = f.querySelector('img')?.getAttribute('src') || '';
+        const caption = f.querySelector('figcaption')?.innerText || '';
+        addFigure(img, caption);
+      });
     } else {
+      description.value = '';
       body.value = '';
+      document.getElementById('figures').innerHTML = '';
     }
 
     // Prévisualisation iframe
@@ -191,15 +208,11 @@ async function loadArticle(idx){
     alert("Fragment introuvable :\n" + path);
     console.error(e);
     body.value = '';
-  }
-
-  // Remplir les figures
-  const figuresDiv = document.getElementById('figures');
-  figuresDiv.innerHTML = '';
-  if(a.figures){
-    a.figures.forEach(f => addFigure(f.src, f.caption));
+    description.value = '';
+    document.getElementById('figures').innerHTML = '';
   }
 }
+
 
 
 
