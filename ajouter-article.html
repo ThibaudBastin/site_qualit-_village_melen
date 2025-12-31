@@ -23,6 +23,7 @@ button { margin-top:.5rem; padding:.6rem 1rem; }
 .figure-row { border:1px solid #ddd; padding:.5rem; margin-bottom:.5rem; }
 iframe { width:100%; height:600px; border:1px solid #ccc; margin-top:1rem; }
 hr { margin:2rem 0; }
+.new-option { margin-top:.3rem; display:flex; gap:.5rem; }
 </style>
 </head>
 <body>
@@ -53,25 +54,48 @@ hr { margin:2rem 0; }
 <input id="file" placeholder="Article-mon-article.html">
 </div>
 
+<!-- Options dynamiques -->
 <div class="form-group">
 <label>Rue</label>
 <select id="rueId"></select>
+<div class="new-option">
+<input id="newRue" placeholder="Nouvelle rue">
+<button onclick="addOption('rues')">➕ Ajouter</button>
+</div>
 </div>
 
 <div class="form-group">
 <label>Période</label>
 <select id="periode"></select>
+<div class="new-option">
+<input id="newPeriode" placeholder="Nouvelle période">
+<button onclick="addOption('periodes')">➕ Ajouter</button>
+</div>
 </div>
 
 <div class="form-group">
 <label>Famille</label>
 <select id="famille"></select>
+<div class="new-option">
+<input id="newFamille" placeholder="Nouvelle famille">
+<button onclick="addOption('familles')">➕ Ajouter</button>
+</div>
 </div>
 
 <div class="form-group">
 <label>Thème</label>
 <select id="theme"></select>
+<div class="new-option">
+<input id="newTheme" placeholder="Nouveau thème">
+<button onclick="addOption('themes')">➕ Ajouter</button>
 </div>
+</div>
+
+<hr>
+
+<h3>Lieux (pour carte)</h3>
+<div id="lieux"></div>
+<button onclick="addLieu()">➕ Ajouter un lieu</button>
 
 <hr>
 
@@ -101,18 +125,26 @@ hr { margin:2rem 0; }
 <h3>Entrée articles.json</h3>
 <textarea id="jsonOut" rows="8"></textarea>
 
+<h3>Options JSON</h3>
+<textarea id="optionsOut" rows="8"></textarea>
+
+<h3>Lieux JSON</h3>
+<textarea id="lieuxOut" rows="8"></textarea>
+
 <div id="downloads"></div>
 
 <script>
 let options = {};
 let articles = [];
+let lieux = [];
 let currentIndex = null;
 
 /* ===================== CHARGEMENT ===================== */
 (async function(){
-  [options, articles] = await Promise.all([
+  [options, articles, lieux] = await Promise.all([
     fetch('options.json').then(r=>r.json()),
-    fetch('articles.json').then(r=>r.json())
+    fetch('articles.json').then(r=>r.json()),
+    fetch('lieux.json').then(r=>r.json())
   ]);
 
   fillSelect('rueId', options.rues.map(r=>r.nom), true);
@@ -129,6 +161,8 @@ let currentIndex = null;
   });
 
   sel.onchange = () => loadArticle(sel.value);
+
+  renderLieux();
 })();
 
 function fillSelect(id, arr, nullable=false){
@@ -139,6 +173,42 @@ function fillSelect(id, arr, nullable=false){
     o.value=i;
     o.textContent=v;
     s.appendChild(o);
+  });
+}
+
+/* ===================== AJOUT OPTIONS ===================== */
+function addOption(type){
+  const input = document.getElementById('new' + type.charAt(0).toUpperCase() + type.slice(1));
+  const val = input.value.trim();
+  if(!val) return;
+  if(!options[type]) options[type]=[];
+  options[type].push(val);
+  input.value='';
+  fillSelect(type==='rues'?'rueId':type, options[type], type!=='rues');
+  optionsOut.value = JSON.stringify(options,null,2);
+}
+
+/* ===================== AJOUT LIEU ===================== */
+function addLieu(){
+  const name = prompt("Nom du lieu");
+  if(!name) return;
+  const id = prompt("ID unique (ex: rue-reux)");
+  if(!id) return;
+  const lat = parseFloat(prompt("Latitude"));
+  const lng = parseFloat(prompt("Longitude"));
+  if(isNaN(lat) || isNaN(lng)) return alert("Coordonnées invalides");
+  lieux.push({id,name,coords:[lat,lng]});
+  renderLieux();
+  lieuxOut.value = JSON.stringify(lieux,null,2);
+}
+
+function renderLieux(){
+  const container = document.getElementById('lieux');
+  container.innerHTML = '';
+  lieux.forEach((l,i)=>{
+    const div=document.createElement('div');
+    div.textContent=`${l.nom} (ID: ${l.id}) 📍 [${l.coords.join(', ')}]`;
+    container.appendChild(div);
   });
 }
 
@@ -178,16 +248,13 @@ async function loadArticle(idx){
     const section = doc.querySelector('.article-body');
 
     if(section){
-      // 1️⃣ Récupérer la description (p.date)
       const dateP = section.querySelector('p.date');
       description.value = dateP ? dateP.innerText.trim() : '';
 
-      // 2️⃣ Récupérer le corps de texte (tous les <p> sauf p.date)
       const paragraphs = Array.from(section.querySelectorAll('p'))
                               .filter(p => !p.classList.contains('date'));
       body.value = paragraphs.map(p => p.innerText.trim()).join('\n\n');
 
-      // 3️⃣ Récupérer les images et légendes
       const figuresDiv = document.getElementById('figures');
       figuresDiv.innerHTML = '';
       section.querySelectorAll('figure').forEach(f => {
@@ -198,10 +265,9 @@ async function loadArticle(idx){
     } else {
       description.value = '';
       body.value = '';
-      document.getElementById('figures').innerHTML = '';
+      figures.innerHTML = '';
     }
 
-    // Prévisualisation iframe
     preview.srcdoc = buildPreview(html);
 
   } catch(e){
@@ -209,14 +275,9 @@ async function loadArticle(idx){
     console.error(e);
     body.value = '';
     description.value = '';
-    document.getElementById('figures').innerHTML = '';
+    figures.innerHTML = '';
   }
 }
-
-
-
-
-
 
 /* ===================== GÉNÉRATION ===================== */
 function generate(){
@@ -250,6 +311,9 @@ function generate(){
 
   downloads.innerHTML='';
   download(fragment, file.value, 'text/html');
+  download(JSON.stringify(jsonEntry,null,2), file.value.replace('.html','.json'),'application/json');
+  download(JSON.stringify(options,null,2), 'options.json','application/json');
+  download(JSON.stringify(lieux,null,2), 'lieux.json','application/json');
 }
 
 /* ===================== HELPERS ===================== */
