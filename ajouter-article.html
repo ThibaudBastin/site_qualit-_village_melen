@@ -54,13 +54,12 @@ hr { margin:2rem 0; }
 <input id="file" placeholder="Article-mon-article.html">
 </div>
 
-<!-- OPTIONS -->
 <div class="form-group">
 <label>Rue</label>
 <select id="rueId"></select>
 <div class="new-option">
-<input id="newRue" placeholder="Nom de la rue">
-<button onclick="addOption('rues')">➕ Ajouter</button>
+<input id="newRue" placeholder="Nouvelle rue">
+<button onclick="addRue()">➕ Ajouter</button>
 </div>
 </div>
 
@@ -68,8 +67,8 @@ hr { margin:2rem 0; }
 <label>Période</label>
 <select id="periode"></select>
 <div class="new-option">
-<input id="newPeriode" placeholder="Nom de la période">
-<button onclick="addOption('periodes')">➕ Ajouter</button>
+<input id="newPeriode" placeholder="Nouvelle période">
+<button onclick="addSimpleOption('periodes')">➕ Ajouter</button>
 </div>
 </div>
 
@@ -77,8 +76,8 @@ hr { margin:2rem 0; }
 <label>Famille</label>
 <select id="famille"></select>
 <div class="new-option">
-<input id="newFamille" placeholder="Nom de la famille">
-<button onclick="addOption('familles')">➕ Ajouter</button>
+<input id="newFamille" placeholder="Nouvelle famille">
+<button onclick="addSimpleOption('familles')">➕ Ajouter</button>
 </div>
 </div>
 
@@ -86,8 +85,8 @@ hr { margin:2rem 0; }
 <label>Thème</label>
 <select id="theme"></select>
 <div class="new-option">
-<input id="newTheme" placeholder="Nom du thème">
-<button onclick="addOption('themes')">➕ Ajouter</button>
+<input id="newTheme" placeholder="Nouveau thème">
+<button onclick="addSimpleOption('themes')">➕ Ajouter</button>
 </div>
 </div>
 
@@ -101,7 +100,7 @@ hr { margin:2rem 0; }
 
 <div class="form-group">
 <label>Corps de l’article</label>
-<textarea id="body" rows="10"></textarea>
+<textarea id="body" rows="10" placeholder="Un paragraphe = une ligne vide"></textarea>
 </div>
 
 <button onclick="generate()">💾 Générer / mettre à jour</button>
@@ -120,7 +119,7 @@ hr { margin:2rem 0; }
 <textarea id="jsonOut" rows="8"></textarea>
 
 <h3>Options JSON</h3>
-<textarea id="optionsOut" rows="10"></textarea>
+<textarea id="optionsOut" rows="8"></textarea>
 
 <div id="downloads"></div>
 
@@ -136,10 +135,10 @@ let currentIndex = null;
     fetch('articles.json').then(r=>r.json())
   ]);
 
-  fillSelectObjects('rueId', options.rues, true);
-  fillSelectObjects('periode', options.periodes);
-  fillSelectObjects('famille', options.familles, true);
-  fillSelectObjects('theme', options.themes);
+  fillSelectRues();
+  fillSelect('periode', options.periodes);
+  fillSelect('famille', options.familles, true);
+  fillSelect('theme', options.themes);
 
   articles.forEach((a,i)=>{
     const o=document.createElement('option');
@@ -148,33 +147,48 @@ let currentIndex = null;
     articleSelect.appendChild(o);
   });
 
-  articleSelect.onchange = () => loadArticle(articleSelect.value);
+  articleSelect.onchange=()=>loadArticle(articleSelect.value);
 })();
 
 /* ===================== SELECTS ===================== */
-function fillSelectObjects(id, arr, nullable=false){
+function fillSelect(id, arr, nullable=false){
   const s=document.getElementById(id);
-  s.innerHTML = nullable ? `<option value="">— Aucun —</option>` : '';
-  arr.forEach(o=>{
-    const opt=document.createElement('option');
-    opt.value=o.id;
-    opt.textContent=o.nom;
-    s.appendChild(opt);
+  s.innerHTML=nullable?'<option value="">— Aucun —</option>':'';
+  arr.forEach((v,i)=>{
+    const o=document.createElement('option');
+    o.value=i;
+    o.textContent=v;
+    s.appendChild(o);
   });
 }
 
-/* ===================== AJOUT OPTION ===================== */
-function addOption(type){
+function fillSelectRues(){
+  const s=document.getElementById('rueId');
+  s.innerHTML='<option value="">— Aucun —</option>';
+  options.rues.forEach((r,i)=>{
+    const o=document.createElement('option');
+    o.value=i;
+    o.textContent=r.nom;
+    s.appendChild(o);
+  });
+}
+
+/* ===================== AJOUT OPTIONS ===================== */
+function addSimpleOption(type){
   const input=document.getElementById('new'+type.charAt(0).toUpperCase()+type.slice(1));
-  const nom=input.value.trim();
-  if(!nom) return;
-
-  const id=prompt("ID unique (ex: place-eglise)");
-  if(!id) return;
-
-  options[type].push({ id, nom });
+  const val=input.value.trim();
+  if(!val)return;
+  options[type].push(val);
   input.value='';
-  fillSelectObjects(type==='rues'?'rueId':type, options[type], type!=='periodes');
+  fillSelect(type,options[type],type==='familles');
+  optionsOut.value=JSON.stringify(options,null,2);
+}
+
+function addRue(){
+  const nom=prompt("Nom de la rue");
+  if(!nom)return;
+  options.rues.push({nom});
+  fillSelectRues();
   optionsOut.value=JSON.stringify(options,null,2);
 }
 
@@ -185,14 +199,13 @@ function addFigure(src='',caption=''){
   d.innerHTML=`
     <input placeholder="Image (images/xxx.jpg)" value="${src}">
     <input placeholder="Légende" value="${caption}">
-    <button onclick="this.parentElement.remove()">❌</button>
-  `;
+    <button onclick="this.parentElement.remove()">❌</button>`;
   figures.appendChild(d);
 }
 
-/* ===================== CHARGER ARTICLE ===================== */
+/* ===================== LECTURE ARTICLE ===================== */
 async function loadArticle(idx){
-  if(idx==='') return;
+  if(idx==='')return;
   currentIndex=Number(idx);
   const a=articles[currentIndex];
 
@@ -206,25 +219,35 @@ async function loadArticle(idx){
   const path='articles/content/'+a.file;
   try{
     const res=await fetch(path);
+    if(!res.ok)throw new Error();
     const html=await res.text();
+    preview.srcdoc=buildPreview(html);
+
     const doc=new DOMParser().parseFromString(html,'text/html');
     const section=doc.querySelector('.article-body');
+    description.value=section?.querySelector('.date')?.innerText || '';
 
-    description.value=section?.querySelector('.date')?.innerText||'';
-    body.value=[...section.querySelectorAll('p:not(.date)')].map(p=>p.innerText).join('\n\n');
+    const ps=[...section.querySelectorAll('p:not(.date)')];
+    body.value=ps.map(p=>p.innerText).join('\n\n');
 
     figures.innerHTML='';
     section.querySelectorAll('figure').forEach(f=>{
-      addFigure(f.querySelector('img')?.src||'', f.querySelector('figcaption')?.innerText||'');
+      addFigure(
+        f.querySelector('img')?.getAttribute('src')||'',
+        f.querySelector('figcaption')?.innerText||''
+      );
     });
 
-    preview.srcdoc=buildPreview(html);
-  }catch(e){ alert("Fragment introuvable"); }
+  }catch{
+    body.value='';
+    description.value='';
+    figures.innerHTML='';
+  }
 }
 
 /* ===================== GÉNÉRATION ===================== */
 function generate(){
-  const figuresData=[...figures.children].map(d=>({
+  const figs=[...figures.children].map(d=>({
     src:d.children[0].value,
     caption:d.children[1].value
   }));
@@ -232,30 +255,30 @@ function generate(){
   const fragment=generateFragment({
     title:title.value,
     description:description.value,
-    figures:figuresData,
+    figures:figs,
     body:body.value
   });
 
   htmlOut.value=fragment;
 
-  const jsonEntry={
+  const entry={
     title:title.value,
     file:file.value,
-    rueId:rueId.value||null,
-    periode:periode.value,
-    famille:famille.value||null,
-    theme:theme.value,
-    image:figuresData[0]?.src||null,
+    rueId:rueId.value!==''?Number(rueId.value):null,
+    periode:Number(periode.value),
+    famille:famille.value!==''?Number(famille.value):null,
+    theme:Number(theme.value),
+    image:figs[0]?.src||null,
     video:null
   };
 
-  jsonOut.value=JSON.stringify(jsonEntry,null,2);
+  jsonOut.value=JSON.stringify(entry,null,2);
   optionsOut.value=JSON.stringify(options,null,2);
   preview.srcdoc=buildPreview(fragment);
 
   downloads.innerHTML='';
   download(fragment,file.value,'text/html');
-  download(JSON.stringify(jsonEntry,null,2),'article.json','application/json');
+  download(JSON.stringify(entry,null,2),file.value.replace('.html','.json'),'application/json');
   download(JSON.stringify(options,null,2),'options.json','application/json');
 }
 
@@ -271,20 +294,20 @@ ${d.figures.map(f=>`
 ${f.caption?`<figcaption>${f.caption}</figcaption>`:''}
 </figure>`).join('')}
 ${d.body.split(/\n\s*\n/).map(p=>`<p>${p}</p>`).join('')}
-</section>
-</article>`;
+</section></article>`;
 }
 
-function buildPreview(f){
-return `<link rel="stylesheet" href="style.css"><main style="max-width:900px;margin:auto">${f}</main>`;
+function buildPreview(html){
+return `<link rel="stylesheet" href="style.css"><main>${html}</main>`;
 }
 
-function download(c,n,t){
+function download(content,name,type){
   const a=document.createElement('a');
-  a.href=URL.createObjectURL(new Blob([c],{type:t}));
-  a.download=n;
+  a.href=URL.createObjectURL(new Blob([content],{type}));
+  a.download=name;
   a.click();
 }
 </script>
+
 </body>
 </html>
