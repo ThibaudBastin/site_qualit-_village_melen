@@ -45,20 +45,21 @@ hr { margin:2rem 0; }
 </div>
 
 <div class="form-group">
-<label>Description</label>
+<label>Description (ligne sous le titre)</label>
 <input id="description">
 </div>
 
 <div class="form-group">
 <label>Nom du fichier fragment</label>
-<input id="file">
+<input id="file" placeholder="Article-mon-article.html">
 </div>
 
 <div class="form-group">
 <label>Rue</label>
 <select id="rueId"></select>
 <div class="new-option">
-<button onclick="addRue()">➕ Ajouter une rue</button>
+<input id="newRue" placeholder="Nouvelle rue">
+<button onclick="addRue()">➕ Ajouter</button>
 </div>
 </div>
 
@@ -99,10 +100,10 @@ hr { margin:2rem 0; }
 
 <div class="form-group">
 <label>Corps de l’article</label>
-<textarea id="body" rows="10"></textarea>
+<textarea id="body" rows="10" placeholder="Un paragraphe = une ligne vide"></textarea>
 </div>
 
-<button onclick="generate()">💾 Générer</button>
+<button onclick="generate()">💾 Générer / mettre à jour</button>
 
 <hr>
 
@@ -111,28 +112,33 @@ hr { margin:2rem 0; }
 
 <hr>
 
-<h3>articles.json</h3>
+<h3>Fragment HTML</h3>
+<textarea id="htmlOut" rows="12"></textarea>
+
+<h3>Entrée articles.json</h3>
 <textarea id="jsonOut" rows="8"></textarea>
 
-<h3>options.json</h3>
-<textarea id="optionsOut" rows="10"></textarea>
+<h3>Options JSON</h3>
+<textarea id="optionsOut" rows="8"></textarea>
 
 <div id="downloads"></div>
 
 <script>
-let options={}, articles=[];
+let options = {};
+let articles = [];
+let currentIndex = null;
 
 /* ===================== CHARGEMENT ===================== */
-(async()=>{
-  [options,articles]=await Promise.all([
+(async function(){
+  [options, articles] = await Promise.all([
     fetch('options.json').then(r=>r.json()),
     fetch('articles.json').then(r=>r.json())
   ]);
 
-  fillRues();
-  fillSelect('periode',options.periodes);
-  fillSelect('famille',options.familles,true);
-  fillSelect('theme',options.themes);
+  fillSelectRues();
+  fillSelect('periode', options.periodes);
+  fillSelect('famille', options.familles, true);
+  fillSelect('theme', options.themes);
 
   articles.forEach((a,i)=>{
     const o=document.createElement('option');
@@ -145,7 +151,7 @@ let options={}, articles=[];
 })();
 
 /* ===================== SELECTS ===================== */
-function fillSelect(id,arr,nullable=false){
+function fillSelect(id, arr, nullable=false){
   const s=document.getElementById(id);
   s.innerHTML=nullable?'<option value="">— Aucun —</option>':'';
   arr.forEach((v,i)=>{
@@ -156,58 +162,87 @@ function fillSelect(id,arr,nullable=false){
   });
 }
 
-function fillRues(){
-  rueId.innerHTML='<option value="">— Aucun —</option>';
+function fillSelectRues(){
+  const s=document.getElementById('rueId');
+  s.innerHTML='<option value="">— Aucun —</option>';
   options.rues.forEach((r,i)=>{
     const o=document.createElement('option');
     o.value=i;
     o.textContent=r.nom;
-    rueId.appendChild(o);
+    s.appendChild(o);
   });
 }
 
-/* ===================== AJOUT RUE ===================== */
-function addRue(){
-  const nom=prompt("Nom de la rue");
-  if(!nom) return;
-
-  const id=prompt("Identifiant unique (ex: rue-reux)");
-  if(!id) return;
-
-  const lat=parseFloat(prompt("Latitude"));
-  const lng=parseFloat(prompt("Longitude"));
-  if(isNaN(lat)||isNaN(lng)) return alert("Coordonnées invalides");
-
-  options.rues.push({
-    id,
-    nom,
-    coords:[lat,lng]
-  });
-
-  fillRues();
-  optionsOut.value=JSON.stringify(options,null,2);
-}
-
-/* ===================== OPTIONS SIMPLES ===================== */
+/* ===================== AJOUT OPTIONS ===================== */
 function addSimpleOption(type){
   const input=document.getElementById('new'+type.charAt(0).toUpperCase()+type.slice(1));
   const val=input.value.trim();
-  if(!val) return;
+  if(!val)return;
   options[type].push(val);
   input.value='';
   fillSelect(type,options[type],type==='familles');
   optionsOut.value=JSON.stringify(options,null,2);
 }
 
+function addRue(){
+  const nom=prompt("Nom de la rue");
+  if(!nom)return;
+  options.rues.push({nom});
+  fillSelectRues();
+  optionsOut.value=JSON.stringify(options,null,2);
+}
+
 /* ===================== FIGURES ===================== */
-function addFigure(src='',cap=''){
+function addFigure(src='',caption=''){
   const d=document.createElement('div');
   d.className='figure-row';
   d.innerHTML=`
-    <input value="${src}" placeholder="Image">
-    <input value="${cap}" placeholder="Légende">
+    <input placeholder="Image (images/xxx.jpg)" value="${src}">
+    <input placeholder="Légende" value="${caption}">
     <button onclick="this.parentElement.remove()">❌</button>`;
   figures.appendChild(d);
+}
+
+/* ===================== LECTURE ARTICLE ===================== */
+async function loadArticle(idx){
+  if(idx==='')return;
+  currentIndex=Number(idx);
+  const a=articles[currentIndex];
+
+  title.value=a.title;
+  file.value=a.file;
+  rueId.value=a.rueId ?? '';
+  periode.value=a.periode;
+  famille.value=a.famille ?? '';
+  theme.value=a.theme;
+
+  const path='articles/content/'+a.file;
+  try{
+    const res=await fetch(path);
+    if(!res.ok)throw new Error();
+    const html=await res.text();
+    preview.srcdoc=buildPreview(html);
+
+    const doc=new DOMParser().parseFromString(html,'text/html');
+    const section=doc.querySelector('.article-body');
+    description.value=section?.querySelector('.date')?.innerText || '';
+
+    const ps=[...section.querySelectorAll('p:not(.date)')];
+    body.value=ps.map(p=>p.innerText).join('\n\n');
+
+    figures.innerHTML='';
+    section.querySelectorAll('figure').forEach(f=>{
+      addFigure(
+        f.querySelector('img')?.getAttribute('src')||'',
+        f.querySelector('figcaption')?.innerText||''
+      );
+    });
+
+  }catch{
+    body.value='';
+    description.value='';
+    figures.innerHTML='';
+  }
 }
 
 /* ===================== GÉNÉRATION ===================== */
@@ -216,6 +251,15 @@ function generate(){
     src:d.children[0].value,
     caption:d.children[1].value
   }));
+
+  const fragment=generateFragment({
+    title:title.value,
+    description:description.value,
+    figures:figs,
+    body:body.value
+  });
+
+  htmlOut.value=fragment;
 
   const entry={
     title:title.value,
@@ -230,16 +274,37 @@ function generate(){
 
   jsonOut.value=JSON.stringify(entry,null,2);
   optionsOut.value=JSON.stringify(options,null,2);
+  preview.srcdoc=buildPreview(fragment);
 
-  download(JSON.stringify(entry,null,2),'article.json','application/json');
+  downloads.innerHTML='';
+  download(fragment,file.value,'text/html');
+  download(JSON.stringify(entry,null,2),file.value.replace('.html','.json'),'application/json');
   download(JSON.stringify(options,null,2),'options.json','application/json');
 }
 
-/* ===================== UTILS ===================== */
-function download(c,n,t){
+/* ===================== HELPERS ===================== */
+function generateFragment(d){
+return `<article class="article-fragment">
+<section class="article-body">
+<h1>${d.title}</h1>
+${d.description?`<p class="date">${d.description}</p>`:''}
+${d.figures.map(f=>`
+<figure>
+<img src="${f.src}">
+${f.caption?`<figcaption>${f.caption}</figcaption>`:''}
+</figure>`).join('')}
+${d.body.split(/\n\s*\n/).map(p=>`<p>${p}</p>`).join('')}
+</section></article>`;
+}
+
+function buildPreview(html){
+return `<link rel="stylesheet" href="style.css"><main>${html}</main>`;
+}
+
+function download(content,name,type){
   const a=document.createElement('a');
-  a.href=URL.createObjectURL(new Blob([c],{type:t}));
-  a.download=n;
+  a.href=URL.createObjectURL(new Blob([content],{type}));
+  a.download=name;
   a.click();
 }
 </script>
