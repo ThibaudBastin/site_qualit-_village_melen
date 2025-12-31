@@ -156,7 +156,7 @@ function addFigure(src='', caption=''){
 
 /* ===================== LECTURE ARTICLE ===================== */
 async function loadArticle(idx){
-  if(idx==='') return; // ne pas reload
+  if(idx==='') return;
   currentIndex = Number(idx);
   const a = articles[currentIndex];
 
@@ -167,42 +167,40 @@ async function loadArticle(idx){
   famille.value = a.famille ?? '';
   theme.value = a.theme;
 
-  // Charger le fragment HTML dans le textarea
-  const path = 'articles/content/' + a.file; // chemin relatif compatible GitHub Pages
+  const path = 'articles/content/' + a.file;
   try {
     const res = await fetch(path);
     if (!res.ok) throw new Error(res.status);
     const html = await res.text();
 
-    // Extraire uniquement le texte du corps pour le textarea
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, 'text/html');
     const section = doc.querySelector('.article-body');
     if(section){
-      const cloned = section.cloneNode(true);
-      // supprimer les figures pour ne garder que le texte
-      cloned.querySelectorAll('figure').forEach(f => f.remove());
-      body.value = cloned.innerText.trim();
+      // extraire le texte des paragraphes uniquement
+      const paragraphs = Array.from(section.querySelectorAll('p'));
+      body.value = paragraphs.map(p => p.innerText.trim()).join('\n\n');
     } else {
       body.value = '';
     }
 
-    // Facultatif : prévisualiser dans l'iframe
+    // Prévisualisation iframe
     preview.srcdoc = buildPreview(html);
 
   } catch(e){
-    alert("Fragment introuvable :\n" + path + "\n\nVérifie le nom du fichier.");
-    console.error("Erreur chargement fragment :", path, e);
+    alert("Fragment introuvable :\n" + path);
+    console.error(e);
     body.value = '';
   }
 
-  // Remplir les figures si elles existent dans l'objet article
+  // Remplir les figures
   const figuresDiv = document.getElementById('figures');
   figuresDiv.innerHTML = '';
   if(a.figures){
     a.figures.forEach(f => addFigure(f.src, f.caption));
   }
 }
+
 
 
 
