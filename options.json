@@ -1,13 +1,4 @@
 {
-  "rues": [
-    { "id": "place-eglise", "nom": "Place de l'église" },
-    { "id": "rue-reux", "nom": "Rue Reux" },
-    { "id": "rue-louis-pasteur", "nom": "Rue Louis Pasteur" },
-    { "id": "rue-haute", "nom": "Rue Haute" },
-    { "id": "parc-hauzeur", "nom": "Rue du Parc Hauzeur" },
-    { "id": "presbytere", "nom": "Presbytère de Melen" },
-    { "id": "arbre-biscuit", "nom": "Bois de Halleux – Arbre aux biscuits" }
-  ],
   "periodes": [
     "18e–20e siècle",
     "Début 20e siècle",
