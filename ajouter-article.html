@@ -1,53 +1,290 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Ajouter / modifier un article</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="style.css">
+
+<script>
+const PASSWORD = "melen1943";
+if (prompt("Mot de passe requis :") !== PASSWORD) {
+  document.write("<h2 style='text-align:center;margin-top:3rem;'>Accès refusé</h2>");
+  throw new Error("Accès refusé");
+}
+</script>
+
+<style>
+body { font-family: Arial, sans-serif; max-width: 1000px; margin: auto; padding: 1rem; }
+.form-group { margin-bottom: 1rem; }
+label { font-weight: bold; display:block; margin-bottom: .3rem; }
+input, textarea, select { width:100%; padding:.5rem; }
+button { margin-top:.5rem; padding:.6rem 1rem; }
+.figure-row { border:1px solid #ddd; padding:.5rem; margin-bottom:.5rem; }
+iframe { width:100%; height:600px; border:1px solid #ccc; margin-top:1rem; }
+hr { margin:2rem 0; }
+.new-option { margin-top:.3rem; display:flex; gap:.5rem; }
+</style>
+</head>
+<body>
+
+<h1>Ajouter / modifier un article</h1>
+
+<div class="form-group">
+<label>Article existant</label>
+<select id="articleSelect">
+<option value="">— Nouvel article —</option>
+</select>
+</div>
+
+<hr>
+
+<div class="form-group">
+<label>Titre</label>
+<input id="title">
+</div>
+
+<div class="form-group">
+<label>Description (ligne sous le titre)</label>
+<input id="description">
+</div>
+
+<div class="form-group">
+<label>Nom du fichier fragment</label>
+<input id="file" placeholder="Article-mon-article.html">
+</div>
+
+<!-- OPTIONS -->
+<div class="form-group">
+<label>Rue</label>
+<select id="rueId"></select>
+<div class="new-option">
+<input id="newRue" placeholder="Nom de la rue">
+<button onclick="addOption('rues')">➕ Ajouter</button>
+</div>
+</div>
+
+<div class="form-group">
+<label>Période</label>
+<select id="periode"></select>
+<div class="new-option">
+<input id="newPeriode" placeholder="Nom de la période">
+<button onclick="addOption('periodes')">➕ Ajouter</button>
+</div>
+</div>
+
+<div class="form-group">
+<label>Famille</label>
+<select id="famille"></select>
+<div class="new-option">
+<input id="newFamille" placeholder="Nom de la famille">
+<button onclick="addOption('familles')">➕ Ajouter</button>
+</div>
+</div>
+
+<div class="form-group">
+<label>Thème</label>
+<select id="theme"></select>
+<div class="new-option">
+<input id="newTheme" placeholder="Nom du thème">
+<button onclick="addOption('themes')">➕ Ajouter</button>
+</div>
+</div>
+
+<hr>
+
+<h3>Images</h3>
+<div id="figures"></div>
+<button onclick="addFigure()">➕ Ajouter une image</button>
+
+<hr>
+
+<div class="form-group">
+<label>Corps de l’article</label>
+<textarea id="body" rows="10"></textarea>
+</div>
+
+<button onclick="generate()">💾 Générer / mettre à jour</button>
+
+<hr>
+
+<h3>Prévisualisation</h3>
+<iframe id="preview"></iframe>
+
+<hr>
+
+<h3>Fragment HTML</h3>
+<textarea id="htmlOut" rows="12"></textarea>
+
+<h3>Entrée articles.json</h3>
+<textarea id="jsonOut" rows="8"></textarea>
+
+<h3>Options JSON</h3>
+<textarea id="optionsOut" rows="10"></textarea>
+
+<div id="downloads"></div>
+
 <script>
 let options = {};
 let articles = [];
 let currentIndex = null;
 
-(async function init() {
+/* ===================== CHARGEMENT ===================== */
+(async function(){
   [options, articles] = await Promise.all([
     fetch('options.json').then(r=>r.json()),
     fetch('articles.json').then(r=>r.json())
   ]);
 
-  fillSelect('rueId', options.rues.map(r=>r.nom), true);
-  fillSelect('periode', options.periodes);
-  fillSelect('famille', options.familles, true);
-  fillSelect('theme', options.themes);
+  fillSelectObjects('rueId', options.rues, true);
+  fillSelectObjects('periode', options.periodes);
+  fillSelectObjects('famille', options.familles, true);
+  fillSelectObjects('theme', options.themes);
 
-  const sel = articleSelect;
   articles.forEach((a,i)=>{
-    const o = document.createElement('option');
-    o.value = i;
-    o.textContent = a.title;
-    sel.appendChild(o);
+    const o=document.createElement('option');
+    o.value=i;
+    o.textContent=a.title;
+    articleSelect.appendChild(o);
   });
-  sel.onchange = () => loadArticle(sel.value);
 
-  renderLieux();
+  articleSelect.onchange = () => loadArticle(articleSelect.value);
 })();
 
-function addLieu() {
-  const name = prompt("Nom du lieu");
-  if(!name) return;
-  const id = prompt("ID unique (ex: rue-reux)");
-  if(!id) return;
-  const lat = parseFloat(prompt("Latitude"));
-  const lng = parseFloat(prompt("Longitude"));
-  if(isNaN(lat)||isNaN(lng)) return alert("Coordonnées invalides");
-
-  const newLieu = { id, nom: name, coords: [lat,lng] };
-  options.rues.push(newLieu);
-  lieuxOut.value = JSON.stringify(options.rues,null,2);
-  fillSelect('rueId', options.rues.map(r=>r.nom), true);
-}
-
-function renderLieux() {
-  const container = document.getElementById('lieux');
-  container.innerHTML = '';
-  options.rues.forEach(l => {
-    const div = document.createElement('div');
-    div.textContent = `${l.nom} (ID: ${l.id}) 📍 [${l.coords.join(', ')}]`;
-    container.appendChild(div);
+/* ===================== SELECTS ===================== */
+function fillSelectObjects(id, arr, nullable=false){
+  const s=document.getElementById(id);
+  s.innerHTML = nullable ? `<option value="">— Aucun —</option>` : '';
+  arr.forEach(o=>{
+    const opt=document.createElement('option');
+    opt.value=o.id;
+    opt.textContent=o.nom;
+    s.appendChild(opt);
   });
 }
+
+/* ===================== AJOUT OPTION ===================== */
+function addOption(type){
+  const input=document.getElementById('new'+type.charAt(0).toUpperCase()+type.slice(1));
+  const nom=input.value.trim();
+  if(!nom) return;
+
+  const id=prompt("ID unique (ex: place-eglise)");
+  if(!id) return;
+
+  options[type].push({ id, nom });
+  input.value='';
+  fillSelectObjects(type==='rues'?'rueId':type, options[type], type!=='periodes');
+  optionsOut.value=JSON.stringify(options,null,2);
+}
+
+/* ===================== FIGURES ===================== */
+function addFigure(src='',caption=''){
+  const d=document.createElement('div');
+  d.className='figure-row';
+  d.innerHTML=`
+    <input placeholder="Image (images/xxx.jpg)" value="${src}">
+    <input placeholder="Légende" value="${caption}">
+    <button onclick="this.parentElement.remove()">❌</button>
+  `;
+  figures.appendChild(d);
+}
+
+/* ===================== CHARGER ARTICLE ===================== */
+async function loadArticle(idx){
+  if(idx==='') return;
+  currentIndex=Number(idx);
+  const a=articles[currentIndex];
+
+  title.value=a.title;
+  file.value=a.file;
+  rueId.value=a.rueId ?? '';
+  periode.value=a.periode;
+  famille.value=a.famille ?? '';
+  theme.value=a.theme;
+
+  const path='articles/content/'+a.file;
+  try{
+    const res=await fetch(path);
+    const html=await res.text();
+    const doc=new DOMParser().parseFromString(html,'text/html');
+    const section=doc.querySelector('.article-body');
+
+    description.value=section?.querySelector('.date')?.innerText||'';
+    body.value=[...section.querySelectorAll('p:not(.date)')].map(p=>p.innerText).join('\n\n');
+
+    figures.innerHTML='';
+    section.querySelectorAll('figure').forEach(f=>{
+      addFigure(f.querySelector('img')?.src||'', f.querySelector('figcaption')?.innerText||'');
+    });
+
+    preview.srcdoc=buildPreview(html);
+  }catch(e){ alert("Fragment introuvable"); }
+}
+
+/* ===================== GÉNÉRATION ===================== */
+function generate(){
+  const figuresData=[...figures.children].map(d=>({
+    src:d.children[0].value,
+    caption:d.children[1].value
+  }));
+
+  const fragment=generateFragment({
+    title:title.value,
+    description:description.value,
+    figures:figuresData,
+    body:body.value
+  });
+
+  htmlOut.value=fragment;
+
+  const jsonEntry={
+    title:title.value,
+    file:file.value,
+    rueId:rueId.value||null,
+    periode:periode.value,
+    famille:famille.value||null,
+    theme:theme.value,
+    image:figuresData[0]?.src||null,
+    video:null
+  };
+
+  jsonOut.value=JSON.stringify(jsonEntry,null,2);
+  optionsOut.value=JSON.stringify(options,null,2);
+  preview.srcdoc=buildPreview(fragment);
+
+  downloads.innerHTML='';
+  download(fragment,file.value,'text/html');
+  download(JSON.stringify(jsonEntry,null,2),'article.json','application/json');
+  download(JSON.stringify(options,null,2),'options.json','application/json');
+}
+
+/* ===================== HELPERS ===================== */
+function generateFragment(d){
+return `<article class="article-fragment">
+<section class="article-body">
+<h1>${d.title}</h1>
+${d.description?`<p class="date">${d.description}</p>`:''}
+${d.figures.map(f=>`
+<figure>
+<img src="${f.src}">
+${f.caption?`<figcaption>${f.caption}</figcaption>`:''}
+</figure>`).join('')}
+${d.body.split(/\n\s*\n/).map(p=>`<p>${p}</p>`).join('')}
+</section>
+</article>`;
+}
+
+function buildPreview(f){
+return `<link rel="stylesheet" href="style.css"><main style="max-width:900px;margin:auto">${f}</main>`;
+}
+
+function download(c,n,t){
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([c],{type:t}));
+  a.download=n;
+  a.click();
+}
 </script>
+</body>
+</html>
