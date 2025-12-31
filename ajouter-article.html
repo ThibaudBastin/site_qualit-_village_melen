@@ -174,7 +174,7 @@ async function loadArticle(idx){
 
 function parseFragment(html){
   const doc=new DOMParser().parseFromString(html,'text/html');
-  lead.value = doc.querySelector('.article-lead')?.textContent || '';
+  description.value = doc.querySelector('.date')?.textContent || '';
 
   figures.innerHTML='';
   doc.querySelectorAll('figure').forEach(f=>{
@@ -192,7 +192,7 @@ function parseFragment(html){
 function generate(){
   const data = {
     title: title.value,
-    lead: lead.value,
+    description: description.value,
     file: file.value,
     figures: [...figures.children].map(d=>({
       src: d.children[0].value,
@@ -225,24 +225,27 @@ function generate(){
 /* =================== HELPERS =================== */
 function generateFragment(d){
 return `<article class="article-fragment">
+  <section class="article-body">
 
-<header class="article-header">
-<h1>${d.title}</h1>
-${d.lead ? `<p class="article-lead">${d.lead}</p>` : ''}
-</header>
+    <h1>${d.title}</h1>
 
-${d.figures.map(f=>`
-<figure>
-<img src="${f.src}">
-${f.caption?`<figcaption>${f.caption}</figcaption>`:''}
-</figure>`).join('\n')}
+    ${d.description
+      ? `<p class="date">${d.description}</p>`
+      : ''}
 
-<section class="article-body">
-${d.body.split(/\n\s*\n/).map(p=>`<p>${p}</p>`).join('\n')}
-</section>
+    ${d.figures.map(f=>`
+    <figure>
+      <img src="${f.src}" alt="">
+      ${f.caption ? `<figcaption>${f.caption}</figcaption>` : ''}
+    </figure>
+    `).join('\n')}
 
+    ${d.body.split(/\n\s*\n/).map(p=>`<p>${p}</p>`).join('\n')}
+
+  </section>
 </article>`;
 }
+
 
 function buildPreview(fragment){
 return `
