@@ -167,7 +167,7 @@ async function loadArticle(idx){
   famille.value = a.famille ?? '';
   theme.value = a.theme;
 
-  const path = 'articles/content/' + a.file;
+  const path = location.origin + '/articles/content/' + a.file;
 
   try {
     const res = await fetch(path);
