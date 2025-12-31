@@ -212,10 +212,17 @@ function addFigure(src='',cap=''){
 
 /* ===================== GÉNÉRATION ===================== */
 function generate(){
-  const figs=[...figures.children].map(d=>({
+  const figuresData=[...figures.children].map(d=>({
     src:d.children[0].value,
     caption:d.children[1].value
   }));
+
+  const fragment=generateFragment({
+    title:title.value,
+    description:description.value,
+    figures:figuresData,
+    body:body.value
+  });
 
   const entry={
     title:title.value,
@@ -224,16 +231,21 @@ function generate(){
     periode:Number(periode.value),
     famille:famille.value!==''?Number(famille.value):null,
     theme:Number(theme.value),
-    image:figs[0]?.src||null,
+    image:figuresData[0]?.src||null,
     video:null
   };
 
   jsonOut.value=JSON.stringify(entry,null,2);
   optionsOut.value=JSON.stringify(options,null,2);
 
+  preview.srcdoc=buildPreview(fragment);
+
+  downloads.innerHTML='';
+  download(fragment,file.value,'text/html');
   download(JSON.stringify(entry,null,2),'article.json','application/json');
   download(JSON.stringify(options,null,2),'options.json','application/json');
 }
+
 
 /* ===================== UTILS ===================== */
 function download(c,n,t){
@@ -242,6 +254,48 @@ function download(c,n,t){
   a.download=n;
   a.click();
 }
+/* ===================== FRAGMENT HTML ===================== */
+function generateFragment(data){
+  return `
+<article class="article-fragment">
+  <section class="article-body">
+
+    <h1>${data.title}</h1>
+
+    ${data.description ? `<p class="date">${data.description}</p>` : ''}
+
+    ${data.figures.map(f => `
+    <figure>
+      <img src="${f.src}" alt="">
+      ${f.caption ? `<figcaption>${f.caption}</figcaption>` : ''}
+    </figure>
+    `).join('')}
+
+    ${data.body
+      .split(/\n\s*\n/)
+      .map(p => `<p>${p}</p>`)
+      .join('\n')}
+
+  </section>
+</article>`;
+}
+
+function buildPreview(fragment){
+  return `
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main style="max-width:900px;margin:auto">
+${fragment}
+</main>
+</body>
+</html>`;
+}
+
 </script>
 
 </body>
