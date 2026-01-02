@@ -16,31 +16,25 @@
     <a href="carte.html">Carte</a>
     <a href="agenda.html">Agenda</a>
     <a href="contact.html">Contacts</a>
+          <!-- Lien discret -->
+    <a href="ajouter-article.html" style="opacity:0.5;font-size:0.9em;">
+    ➕ Ajouter
+    </a>
   </nav>
 </header>
 
 <main>
-  <section id="latest-news">
-    <h2>Dernières actualités du groupement</h2>
 
-    <div class="news-item">
-      <h3>Nouveau service intercommunal</h3>
-      <p class="date">12 décembre 2025</p>
-      <p>Mise en place d’un nouveau service destiné aux habitants du territoire.</p>
-    </div>
-
-    <div class="news-item">
-      <h3>Travaux communautaires</h3>
-      <p class="date">5 décembre 2025</p>
-      <p>Des travaux de voirie sont en cours sur plusieurs communes.</p>
-    </div>
-
-    <div class="news-item">
-      <h3>Nouvelle aide aux associations</h3>
-      <p class="date">28 novembre 2025</p>
-      <p>Lancement d’un nouveau dispositif de soutien aux associations locales.</p>
-    </div>
+  <section>
+    <h2>Prochains événements</h2>
+    <ul id="eventsList"></ul>
   </section>
+
+  <section>
+    <h2>Derniers articles</h2>
+    <div id="latestArticles"></div>
+  </section>
+
 </main>
 
 <footer>
@@ -49,3 +43,81 @@
 
 </body>
 </html>
+
+
+<script>
+/* ===============================
+   ÉVÉNEMENTS (events.json)
+================================ */
+fetch('events.json')
+  .then(res => res.json())
+  .then(events => {
+    const list = document.getElementById('eventsList');
+    const today = new Date().toISOString().split('T')[0];
+
+    const flattened = [];
+
+    Object.keys(events).forEach(date => {
+      events[date].forEach(ev => {
+        flattened.push({
+          date,
+          title: ev.title,
+          place: ev.place
+        });
+      });
+    });
+
+    flattened
+      .filter(e => e.date >= today)
+      .sort((a, b) => a.date.localeCompare(b.date))
+      .slice(0, 3)
+      .forEach(ev => {
+        const li = document.createElement('li');
+        li.innerHTML = `
+          <strong>${ev.date}</strong><br>
+          ${ev.title} – ${ev.place}
+        `;
+        list.appendChild(li);
+      });
+  });
+
+
+/* ===============================
+   ARTICLES (articles.json)
+   → derniers ajoutés (fin du fichier)
+================================ */
+fetch('articles.json')
+  .then(res => res.json())
+  .then(articles => {
+    const container = document.getElementById('latestArticles');
+
+    articles
+      .slice(-3)        // les 3 derniers ajoutés
+      .reverse()        // le plus récent en premier
+      .forEach(a => {
+        const div = document.createElement('div');
+        div.className = 'article-preview';
+
+        let media = '';
+        if (a.image) {
+          media = `<img src="${a.image}" alt="${a.title}" style="max-width:100%;border-radius:6px;">`;
+        } else if (a.video) {
+          media = `<video controls style="max-width:100%;border-radius:6px;">
+                     <source src="${a.video}" type="video/mp4">
+                   </video>`;
+        }
+
+        div.innerHTML = `
+          <h3>${a.title}</h3>
+          ${media}
+          <p>
+            <a href="article.html?file=${encodeURIComponent(a.file)}">
+              Lire l’article
+            </a>
+          </p>
+        `;
+
+        container.appendChild(div);
+      });
+  });
+</script>

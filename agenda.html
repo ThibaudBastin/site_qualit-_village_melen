@@ -5,61 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Agenda</title>
   <link rel="stylesheet" href="style.css">
+
   <style>
-    .calendar {
-      max-width: 800px;
-      margin: 2rem auto;
-      background: #fff;
-      padding: 1rem;
-      border-radius: 8px;
-    }
-
-    .calendar-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 1rem;
-    }
-
-    .calendar-header button {
-      padding: 0.4rem 0.8rem;
-      cursor: pointer;
-    }
-
-    .calendar-grid {
-      display: grid;
-      grid-template-columns: repeat(7, 1fr);
-      gap: 5px;
-      text-align: center;
-    }
-
-    .day-name {
-      font-weight: bold;
-      background: #f0f0f0;
-      padding: 0.5rem 0;
-    }
-
-    .day {
-      min-height: 80px;
-      border: 1px solid #ddd;
-      padding: 4px;
-      font-size: 0.9rem;
-    }
-
-    .day.today {
-      background: #e6f2ff;
-      border-color: #4a90e2;
-    }
-    .day.event-day {
-  background-color: #ffe6a7;
-  border: 2px solid #d39e00;
-  cursor: pointer;
-}
-
     table {
       width: 100%;
       border-collapse: collapse;
       margin-top: 2rem;
+      background: #fff;
     }
 
     table th, table td {
@@ -70,6 +22,11 @@
 
     table th {
       background: #f5f5f5;
+    }
+
+    main {
+      max-width: 900px;
+      margin: 2rem auto;
     }
   </style>
 </head>
@@ -83,50 +40,25 @@
     <a href="carte.html">Carte</a>
     <a href="agenda.html">Agenda</a>
     <a href="contact.html">Contacts</a>
-      <!-- Lien discret -->
-    <a href="ajouter-article.html" style="opacity:0.5;font-size:0.9em;">
-    ➕ Ajouter
-    </a>
+    <a href="ajouter-article.html" style="opacity:0.5;font-size:0.9em;">➕ Ajouter</a>
   </nav>
 </header>
 
 <main>
-  <section class="calendar">
-    <div class="calendar-header">
-      <button id="prevMonth">◀</button>
-      <h2 id="monthYear"></h2>
-      <button id="nextMonth">▶</button>
-    </div>
+  <h2>Liste des événements</h2>
 
-    <div class="calendar-grid" id="calendarDays">
-      <div class="day-name">Lun</div>
-      <div class="day-name">Mar</div>
-      <div class="day-name">Mer</div>
-      <div class="day-name">Jeu</div>
-      <div class="day-name">Ven</div>
-      <div class="day-name">Sam</div>
-      <div class="day-name">Dim</div>
-    </div>
-
-    <h3>Liste des événements</h3>
-    <table>
-      <thead>
-        <tr>
-          <th>Date</th>
-          <th>Événement</th>
-          <th>Lieu</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>21/02/2026</td>
-          <td>Soirée jeux de Melen</td>
-          <td>Concordia de Melen</td>
-        </tr>
-
-      </tbody>
-    </table>
-  </section>
+  <table>
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Événement</th>
+        <th>Lieu</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Rempli automatiquement -->
+    </tbody>
+  </table>
 </main>
 
 <footer>
@@ -140,52 +72,8 @@
     .then(response => response.json())
     .then(data => {
       events = data;
-      renderCalendar(currentDate);
       renderTable();
     });
-
-  const monthYear = document.getElementById('monthYear');
-  const calendarDays = document.getElementById('calendarDays');
-  const prevMonthBtn = document.getElementById('prevMonth');
-  const nextMonthBtn = document.getElementById('nextMonth');
-
-  let currentDate = new Date();
-
-  function renderCalendar(date) {
-    const year = date.getFullYear();
-    const month = date.getMonth();
-
-    const monthNames = [
-      'Janvier','Février','Mars','Avril','Mai','Juin',
-      'Juillet','Août','Septembre','Octobre','Novembre','Décembre'
-    ];
-
-    monthYear.textContent = `${monthNames[month]} ${year}`;
-
-    const firstDay = new Date(year, month, 1).getDay() || 7;
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-
-    calendarDays.querySelectorAll('.day').forEach(d => d.remove());
-
-    for (let i = 1; i < firstDay; i++) {
-      calendarDays.appendChild(document.createElement('div'));
-    }
-
-    for (let day = 1; day <= daysInMonth; day++) {
-      const dayDiv = document.createElement('div');
-      dayDiv.className = 'day';
-      dayDiv.textContent = day;
-
-      const dateKey = `${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
-
-      if (events[dateKey]) {
-        dayDiv.classList.add('event-day');
-        dayDiv.title = events[dateKey].map(e => e.title).join(' / ');
-      }
-
-      calendarDays.appendChild(dayDiv);
-    }
-  }
 
   function renderTable() {
     const tbody = document.querySelector('table tbody');
@@ -203,16 +91,6 @@
       });
     });
   }
-
-  prevMonthBtn.addEventListener('click', () => {
-    currentDate.setMonth(currentDate.getMonth() - 1);
-    renderCalendar(currentDate);
-  });
-
-  nextMonthBtn.addEventListener('click', () => {
-    currentDate.setMonth(currentDate.getMonth() + 1);
-    renderCalendar(currentDate);
-  });
 </script>
 
 </body>
