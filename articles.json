@@ -62,9 +62,9 @@
   {
     "title": "Louis et Léonard, les petits Juifs cachés rue Haute",
     "file": "Article-louis-leonard.html",
-    "rueId": 3,
+    "rueId": 9,
     "periode": 3,
-    "famille": null,
+    "famille": 3,
     "theme": 2,
     "image": "images/rue-haute1.jpeg",
     "video": null
