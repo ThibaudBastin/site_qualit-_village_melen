@@ -168,5 +168,25 @@
   "theme": 3,
   "image": "images/arbre-biscuit-bois-halleux4.jpeg",
   "video": null
+},
+{
+  "title": "C'était au temps ou l'arbre biscuit ne rampait pas encore",
+  "file": "Article-arbre-rampait-pas-encore.html",
+  "rueId": 6,
+  "periode": 5,
+  "famille": null,
+  "theme": 1,
+  "image": "images/arbre-biscuit-bois-halleux6.jpeg",
+  "video": null
+},
+{
+  "title": "Un pont à la mélinoise afin de passer vers un an neuf",
+  "file": "Pont-arbre.html",
+  "rueId": 7,
+  "periode": 0,
+  "famille": null,
+  "theme": 0,
+  "image": "images/pont-ardoncour.jpeg",
+  "video": null
 }
 ]
