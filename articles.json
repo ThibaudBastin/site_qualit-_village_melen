@@ -188,5 +188,15 @@
   "theme": 0,
   "image": "images/pont-ardoncour.jpeg",
   "video": null
+},
+{
+  "title": "Aujourd'hui, c'est la marche à l'étoile et la fête des rois!",
+  "file": "Epiphanie.html",
+  "rueId": 8,
+  "periode": 5,
+  "famille": null,
+  "theme": 1,
+  "image": "images/epiphanie.jpeg",
+  "video": null
 }
 ]
