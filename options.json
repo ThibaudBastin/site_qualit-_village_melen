@@ -71,6 +71,14 @@
         50.646202,
         5.736785
       ]
+    },
+    {
+      "nom": "chemin du Baudouintige",
+      "id": "Baudouintige",
+      "coords": [
+        50.646618,
+        5.748593
+      ]
     }
   ],
   "periodes": [
@@ -82,12 +90,14 @@
     "XXe siècle",
     "XVIIIe–XIXe siècle",
     "1943–1989",
-    "Légende contemporaine (2015)"
+    "Légende contemporaine (2015)",
+    "1944-1945"
   ],
   "familles": [
     "Fafchamps",
     "Malvaux",
-    "Chaineux"
+    "Chaineux",
+    "Herkenne et Royen"
   ],
   "themes": [
     "Patrimoine",

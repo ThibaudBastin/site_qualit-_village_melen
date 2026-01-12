@@ -198,5 +198,15 @@
   "theme": 1,
   "image": "images/epiphanie.jpeg",
   "video": null
+},
+{
+  "title": "A la guerre comme à la guerre, face à la neige, durant l'hiver 1944-1945",
+  "file": "hiver1944.html",
+  "rueId": 9,
+  "periode": 9,
+  "famille": 3,
+  "theme": 1,
+  "image": "neige-Herkenne.jpeg",
+  "video": null
 }
 ]
