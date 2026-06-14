@@ -206,7 +206,7 @@
   "periode": 9,
   "famille": 3,
   "theme": 1,
-  "image": "neige-Herkenne.jpeg",
+  "image": "images/neige-Herkenne.jpeg",
   "video": null
 },
 {
@@ -236,7 +236,7 @@
   "periode": 9,
   "famille": null,
   "theme": 2,
-  "image": "images/parc-hauzeur-1944.jpg",
+  "image": "images/parc-hauzeur-1944_1.jpg",
   "video": null
 },
 {
@@ -247,6 +247,25 @@
   "famille": null,
   "theme": 2,
   "image": "images/thomas-hidalgo.png",
+  "video": null
+},
+{
+  "title": "Le tir du premier obus sur l'Allemagne nazie aurait été ordonné à Melen",
+  "file": "article-premier-obus-melen.html",
+  "rueId": 13,
+  "periode": 9,
+  "famille": null,
+  "theme": 2,
+  "image": "images/980e-premier-tir.jpg",
+  "video": null
+},{
+  "title": "Un half-track et des libérateurs souriants en 44, près du Parc Hauzeur",
+  "file": "article-halftrack-parc-hauzeur.html",
+  "rueId": 4,
+  "periode": 9,
+  "famille": null,
+  "theme": 2,
+  "image": "images/parc-hauzeur-1944_2.jpg",
   "video": null
 }
 ]

@@ -94,6 +94,11 @@
   "id": "noblehaye",
   "nom": "Noblehaye",
   "coords": [50.651035, 5.763407]
+},
+{
+  "id": "haute-melen",
+  "nom": "Haute-Melen",
+  "coords": [50.6419, 5.7369]
 }
   ],
   "periodes": [
