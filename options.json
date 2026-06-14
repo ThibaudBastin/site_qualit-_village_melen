@@ -79,6 +79,11 @@
         50.646618,
         5.748593
       ]
+    },
+    {
+      "id": "rue-citadelle",
+      "nom": "Rue Citadelle",
+      "coords": [50.646000, 5.738000]
     }
   ],
   "periodes": [
@@ -91,7 +96,8 @@
     "XVIIIe–XIXe siècle",
     "1943–1989",
     "Légende contemporaine (2015)",
-    "1944-1945"
+    "1944-1945",
+    "Époque contemporaine (XXIe siècle)"
   ],
   "familles": [
     "Fafchamps",
