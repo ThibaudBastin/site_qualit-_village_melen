@@ -83,8 +83,13 @@
     {
       "id": "rue-citadelle",
       "nom": "Rue Citadelle",
-      "coords": [50.646000, 5.738000]
-    }
+      "coords": [50.647187, 5.739492]
+    },
+    {
+  "id": "dison",
+  "nom": "Dison",
+  "coords": [50.610016, 5.854110]
+}
   ],
   "periodes": [
     "18e–20e siècle",

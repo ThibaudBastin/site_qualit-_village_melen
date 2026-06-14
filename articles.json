@@ -212,11 +212,21 @@
 {
   "title": "Première belge, rue Citadelle : une maison bioclimatique et autoconstruite",
   "file": "article-maison-bioclimatique.html",
-  "rueId": "rue-citadelle",
+  "rueId": 10,
   "periode": 10,
   "famille": null,
   "theme": 0,
-  "image": "images/maison-bioclimatique.jpg",
+  "image": "images/maison_bioclimatique_1.jpg",
+  "video": null
+},
+{
+  "title": "Les G.I. du 991e ont devancé les artilleurs de Bolland de quelques heures",
+  "file": "article-991e-dison.html",
+  "rueId": 11,
+  "periode": 9,
+  "famille": null,
+  "theme": 2,
+  "image": "images/dison_1.jpg",
   "video": null
 }
 ]
