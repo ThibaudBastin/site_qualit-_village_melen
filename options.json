@@ -89,6 +89,11 @@
   "id": "dison",
   "nom": "Dison",
   "coords": [50.610016, 5.854110]
+},
+{
+  "id": "noblehaye",
+  "nom": "Noblehaye",
+  "coords": [50.651035, 5.763407]
 }
   ],
   "periodes": [

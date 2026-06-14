@@ -228,5 +228,25 @@
   "theme": 2,
   "image": "images/dison_1.jpg",
   "video": null
+},
+{
+  "title": "Des canons et des G.I. aussi au Parc Hauzeur",
+  "file": "article-parc-hauzeur-gis.html",
+  "rueId": 4,
+  "periode": 9,
+  "famille": null,
+  "theme": 2,
+  "image": "images/parc-hauzeur-1944.jpg",
+  "video": null
+},
+{
+  "title": "L'artilleur qui a exécuté l'ordre donné à Melen de tirer sur le Reich est mort à 102 ans",
+  "file": "article-hidalgo-102-ans.html",
+  "rueId": 12,
+  "periode": 9,
+  "famille": null,
+  "theme": 2,
+  "image": "images/thomas-hidalgo.png",
+  "video": null
 }
 ]
