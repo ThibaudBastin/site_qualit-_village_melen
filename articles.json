@@ -285,5 +285,24 @@
   "theme": 0,
   "image": "images/thier1.jpeg",
   "video": null
+},{
+  "title": "HYPE, YPE,  YBRE... C'EST LÀ!",
+  "file": "hype-ype-ybre-cest-la.html",
+  "rueId": 15,
+  "periode": 0,
+  "famille": null,
+  "theme": 0,
+  "image": "images/ype1.jpeg",
+  "video": null
+},{
+  "title": "NOTRE HOUBLON MÉLINOIS FAIT DE LA RÉSISTANCE, 290 ANS PLUS TARD!",
+  "file": "houblon-melinois-resistance-290-ans.html",
+  "rueId": 10,
+  "periode": 0,
+  "famille": null,
+  "theme": 3,
+  "image": "images/houblon1.jpeg",
+  "video": null
 }
+
 ]

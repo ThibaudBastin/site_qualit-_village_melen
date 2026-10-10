@@ -104,6 +104,11 @@
   "id": "thier du mont",
   "nom": "Thier du Mont",
   "coords": [50.646787, 5.741929]
+},
+{
+  "id": "rue de l'ype",
+  "nom": "Rue de l'ype",
+  "coords": [50.634333, 5.722804]
 }
 
   ],
