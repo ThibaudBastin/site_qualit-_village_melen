@@ -256,7 +256,7 @@
   "periode": 9,
   "famille": null,
   "theme": 2,
-  "image": "images/980e-premier-tir.jpg",
+  "image": "images/haute-melen-1944-pont.jpg",
   "video": null
 },{
   "title": "Un half-track et des libérateurs souriants en 44, près du Parc Hauzeur",
@@ -266,6 +266,15 @@
   "famille": null,
   "theme": 2,
   "image": "images/parc-hauzeur-1944_2.jpg",
+  "video": null
+},{
+  "title": "\"GLOUGLOU\" OU \"PSCHIIIIT\" AU COL DE CYGNE DU PIED DU THIER",
+  "file": "glouglou-pschiiiit-col-de-cygne-pied-du-thier.html",
+  "rueId": 10,
+  "periode": 5,
+  "famille": 2,
+  "theme": 1,
+  "image": "images/glouglou.jpg",
   "video": null
 }
 ]
