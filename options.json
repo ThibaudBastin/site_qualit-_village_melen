@@ -99,6 +99,11 @@
   "id": "haute-melen",
   "nom": "Haute-Melen",
   "coords": [50.6419, 5.7369]
+},
+{
+  "id": "thier du mont",
+  "nom": "Thier du Mont",
+  "coords": [50.646787, 5.741929]
 }
   ],
   "periodes": [
